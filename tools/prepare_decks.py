@@ -54,10 +54,20 @@ $ErrorActionPreference = 'Stop'
 $pp = New-Object -ComObject PowerPoint.Application
 try {
   foreach ($f in $args) {
-    $p = $pp.Presentations.Open($f, $true, $false, $false)
-    $p.SaveAs([IO.Path]::ChangeExtension($f, '.pdf'), 32)
-    $p.Close()
-    Write-Output ('pdf: ' + [IO.Path]::GetFileName($f))
+    # PowerPoint occasionally fails a COM call on one deck; one retry is enough.
+    foreach ($try in 1, 2) {
+      try {
+        $p = $pp.Presentations.Open($f, $true, $false, $false)
+        $p.SaveAs([IO.Path]::ChangeExtension($f, '.pdf'), 32)
+        $p.Close()
+        Write-Output ('pdf: ' + [IO.Path]::GetFileName($f))
+        break
+      } catch {
+        if ($p) { try { $p.Close() } catch {} }
+        if ($try -eq 2) { throw }
+        Start-Sleep -Seconds 2
+      }
+    }
   }
 } finally { $pp.Quit() }
 """
