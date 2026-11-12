@@ -1,0 +1,7 @@
+# CE 502 · extra packages for Weeks 10-12 (embeddings, vector databases, RAG, recommenders)
+#   pip install -r setup/requirements-ai.txt        (also installs requirements.txt)
+# sentence-transformers downloads PyTorch (several hundred MB) and, on first use, a ~90 MB model.
+-r requirements.txt
+chromadb==1.5.9
+scikit-learn==1.9.1
+sentence-transformers==3.3.1

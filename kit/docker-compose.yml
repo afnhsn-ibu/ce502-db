@@ -1,0 +1,114 @@
+# CE 502 · lab environment
+#
+#   docker compose up -d --build                     # PostgreSQL only (Weeks 1-8, 10-12)
+#   docker compose --profile replication up -d       # + streaming replica (Lesson 2-2 demo)
+#   docker compose --profile nosql up -d             # + MongoDB and Cassandra (Weeks 9 and 11)
+#   docker compose --profile atlas up -d             # + local MongoDB with vector search (Week 11, optional)
+#   docker compose ps                                # wait for "healthy"
+#   docker compose down                              # stop (data is kept)
+#   docker compose down -v                           # stop and delete ALL data
+name: ce502
+
+services:
+  postgres:
+    build: ./docker/postgres
+    image: ce502/postgres:16
+    container_name: ce502-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: lab
+      POSTGRES_DB: lab
+      REPLICATOR_PASSWORD: replicator
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - pgarchive:/archive          # archived WAL files (Week 2)
+      - pgbackup:/backup            # dumps and base backups (Week 2)
+      - ./:/kit:ro                  # this kit, read-only, for \i and bash scripts
+    shm_size: 256mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lab"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  replica:
+    build: ./docker/postgres
+    image: ce502/postgres:16
+    container_name: ce502-replica
+    profiles: ["replication"]
+    user: postgres
+    entrypoint: ["/usr/local/bin/replica-entrypoint.sh"]
+    environment:
+      PRIMARY_HOST: postgres
+      PGPASSWORD: replicator
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5433:5432"
+    volumes:
+      - replicadata:/var/lib/postgresql/data
+      - ./:/kit:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  # Weeks 9 and 11. Single-node replica set, so multi-document transactions work.
+  mongo:
+    image: mongo:7.0
+    container_name: ce502-mongo
+    profiles: ["nosql"]
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+      - ./:/kit:ro
+    healthcheck:
+      # initiates the replica set on first start, then reports its state
+      test: ["CMD", "mongosh", "--quiet", "--eval",
+             "try { rs.status().ok } catch (e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]}).ok }"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+
+  # Weeks 9 and 11. Needs about 1.5 GB of RAM; first start takes about a minute.
+  cassandra:
+    image: cassandra:5.0
+    container_name: ce502-cassandra
+    profiles: ["nosql"]
+    environment:
+      MAX_HEAP_SIZE: 768M
+      HEAP_NEWSIZE: 128M
+      CASSANDRA_CLUSTER_NAME: ce502
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandradata:/var/lib/cassandra
+      - ./:/kit:ro
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+
+  # Week 11 (optional): MongoDB with $vectorSearch, an alternative to an Atlas free cluster.
+  # [test before class] confirm the image tag; mongodb/mongodb-atlas-local:latest also works.
+  mongo-atlas:
+    image: mongodb/mongodb-atlas-local:8.0
+    container_name: ce502-atlas
+    profiles: ["atlas"]
+    ports:
+      - "27018:27017"
+
+volumes:
+  pgdata:
+  pgarchive:
+  pgbackup:
+  replicadata:
+  mongodata:
+  cassandradata:

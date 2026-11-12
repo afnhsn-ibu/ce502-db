@@ -1,0 +1,352 @@
+# Links for every paper in course.yml, keyed by the exact citation text used there.
+# pdf: only for openly licensed papers; the file lives in readings/ and is copied to the site.
+# Never add a pdf for a copyrighted paper - link it with doi / free_url instead.
+Codd 1970, A Relational Model of Data for Large Shared Data Banks (CACM 13(6)):
+  citation: Codd, E. F. (1970). A relational model of data for large shared data banks. Communications of the ACM, 13(6),
+    377–387.
+  doi: 10.1145/362384.362685
+Haerder & Reuter 1983, Principles of Transaction-Oriented Database Recovery (ACM Computing Surveys 15(4)):
+  citation: Haerder, T., & Reuter, A. (1983). Principles of transaction-oriented database recovery. ACM Computing Surveys,
+    15(4), 287–317.
+  doi: 10.1145/289.291
+Mohan et al. 1992, ARIES (ACM TODS 17(1)):
+  citation: 'Mohan, C., Haderle, D., Lindsay, B., Pirahesh, H., & Schwarz, P. (1992). ARIES: A transaction recovery method
+    supporting fine-granularity locking and partial rollbacks using write-ahead logging. ACM Transactions on Database Systems,
+    17(1), 94–162.'
+  doi: 10.1145/128765.128770
+Gray 1981, The Transaction Concept (VLDB):
+  citation: 'Gray, J. (1981). The transaction concept: Virtues and limitations. In Proceedings of the 7th International
+    Conference on Very Large Data Bases (VLDB ''81) (pp. 144–154).'
+  free_url: https://jimgray.azurewebsites.net/papers/thetransactionconcept.pdf
+Stonebraker & Pavlo 2024, What Goes Around Comes Around… And Around… (SIGMOD Record 53(2)):
+  citation: Stonebraker, M., & Pavlo, A. (2024). What goes around comes around... and around... ACM SIGMOD Record, 53(2),
+    21–37.
+  doi: 10.1145/3685980.3685984
+  free_url: https://db.cs.cmu.edu/papers/2024/whatgoesaround-sigmodrec2024.pdf
+Keshav 2007, How to Read a Paper (SIGCOMM CCR 37(3)):
+  citation: Keshav, S. (2007). How to read a paper. ACM SIGCOMM Computer Communication Review, 37(3), 83–84.
+  doi: 10.1145/1273445.1273458
+  free_url: http://ccr.sigcomm.org/online/files/p83-keshavA.pdf
+Gray et al. 1996, The Dangers of Replication and a Solution (SIGMOD):
+  citation: Gray, J., Helland, P., O'Neil, P., & Shasha, D. (1996). The dangers of replication and a solution. In Proceedings
+    of the 1996 ACM SIGMOD International Conference on Management of Data (SIGMOD '96) (pp. 173–182). ACM.
+  doi: 10.1145/233269.233330
+  free_url: https://www.microsoft.com/en-us/research/publication/the-dangers-of-replication-and-a-solution/
+Verbitski et al. 2017, Amazon Aurora (SIGMOD):
+  citation: 'Verbitski, A., Gupta, A., Saha, D., Brahmadesam, M., Gupta, K., Mittal, R., Krishnamurthy, S., Maurice, S.,
+    Kharatishvili, T., & Bao, X. (2017). Amazon Aurora: Design considerations for high throughput cloud-native relational
+    databases. In Proceedings of the 2017 ACM International Conference on Management of Data (SIGMOD ''17) (pp. 1041–1052).
+    ACM.'
+  doi: 10.1145/3035918.3056101
+  free_url: https://www.amazon.science/publications/amazon-aurora-design-considerations-for-high-throughput-cloud-native-relational-databases
+Ongaro & Ousterhout 2014, Raft (USENIX ATC):
+  citation: Ongaro, D., & Ousterhout, J. (2014). In search of an understandable consensus algorithm. In Proceedings of the
+    2014 USENIX Annual Technical Conference (USENIX ATC '14) (pp. 305–319). USENIX Association.
+  url: https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro
+  free_url: https://files.usenix.org/s3fs-public/cdn/atc14-paper-ongaro.pdf
+Patterson, Gibson & Katz 1988, RAID (SIGMOD):
+  citation: Patterson, D. A., Gibson, G., & Katz, R. H. (1988). A case for redundant arrays of inexpensive disks (RAID).
+    In Proceedings of the 1988 ACM SIGMOD International Conference on Management of Data (SIGMOD '88) (pp. 109–116). ACM.
+  doi: 10.1145/50202.50214
+  free_url: https://www.cs.cmu.edu/~garth/RAIDpaper/Patterson88.pdf
+Kemme & Alonso 2000, Postgres-R (VLDB):
+  citation: 'Kemme, B., & Alonso, G. (2000). Don''t be lazy, be consistent: Postgres-R, a new way to implement database
+    replication. In Proceedings of the 26th International Conference on Very Large Data Bases (VLDB 2000) (pp. 134–143).
+    Morgan Kaufmann.'
+  free_url: https://www.vldb.org/conf/2000/P134.pdf
+Bernstein, Hadzilacos & Goodman 1987, Concurrency Control and Recovery in Database Systems, ch. 6–8:
+  citation: Bernstein, P. A., Hadzilacos, V., & Goodman, N. (1987). Concurrency control and recovery in database systems
+    (Chs. 6–8). Addison-Wesley.
+  free_url: https://www.microsoft.com/en-us/research/people/philbe/book/
+Eswaran et al. 1976, Consistency and Predicate Locks (CACM 19(11)):
+  citation: Eswaran, K. P., Gray, J. N., Lorie, R. A., & Traiger, I. L. (1976). The notions of consistency and predicate
+    locks in a database system. Communications of the ACM, 19(11), 624–633.
+  doi: 10.1145/360363.360369
+Berenson et al. 1995, A Critique of ANSI SQL Isolation Levels (SIGMOD):
+  citation: Berenson, H., Bernstein, P., Gray, J., Melton, J., O'Neil, E., & O'Neil, P. (1995). A critique of ANSI SQL isolation
+    levels. In Proceedings of the 1995 ACM SIGMOD International Conference on Management of Data (SIGMOD '95) (pp. 1–10).
+    ACM.
+  doi: 10.1145/223784.223785
+  free_url: https://arxiv.org/abs/cs/0701157
+Ports & Grittner 2012, Serializable Snapshot Isolation in PostgreSQL (PVLDB 5(12)):
+  citation: Ports, D. R. K., & Grittner, K. (2012). Serializable snapshot isolation in PostgreSQL. Proceedings of the VLDB
+    Endowment, 5(12), 1850–1861.
+  doi: 10.14778/2367502.2367523
+  free_url: https://vldb.org/pvldb/vol5/p1850_danrkports_vldb2012.pdf
+Kung & Robinson 1981, On Optimistic Methods for Concurrency Control (ACM TODS 6(2)):
+  citation: Kung, H. T., & Robinson, J. T. (1981). On optimistic methods for concurrency control. ACM Transactions on Database
+    Systems, 6(2), 213–226.
+  doi: 10.1145/319566.319567
+  free_url: https://www.eecs.harvard.edu/~htk/publication/1981-tods-kung-robinson.pdf
+Cahill, Röhm & Fekete 2008, Serializable Isolation for Snapshot Databases (SIGMOD):
+  citation: Cahill, M. J., Röhm, U., & Fekete, A. D. (2008). Serializable isolation for snapshot databases. In Proceedings
+    of the 2008 ACM SIGMOD International Conference on Management of Data (SIGMOD '08) (pp. 729–738). ACM.
+  doi: 10.1145/1376616.1376690
+Adya, Liskov & O'Neil 2000, Generalized Isolation Level Definitions (ICDE):
+  citation: Adya, A., Liskov, B., & O'Neil, P. (2000). Generalized isolation level definitions. In Proceedings of the 16th
+    International Conference on Data Engineering (ICDE 2000) (pp. 67–78). IEEE.
+  doi: 10.1109/ICDE.2000.839388
+Stonebraker 1986, The Case for Shared Nothing (IEEE Database Eng. Bull. 9(1)):
+  citation: Stonebraker, M. (1986). The case for shared nothing. IEEE Database Engineering Bulletin, 9(1), 4–9.
+  free_url: http://sites.computer.org/debull/86MAR-CD.pdf
+DeWitt & Gray 1992, Parallel Database Systems (CACM 35(6)):
+  citation: 'DeWitt, D., & Gray, J. (1992). Parallel database systems: The future of high performance database systems.
+    Communications of the ACM, 35(6), 85–98.'
+  doi: 10.1145/129888.129894
+Sheth & Larson 1990, Federated Database Systems (ACM Computing Surveys 22(3)):
+  citation: Sheth, A. P., & Larson, J. A. (1990). Federated database systems for managing distributed, heterogeneous, and
+    autonomous databases. ACM Computing Surveys, 22(3), 183–236.
+  doi: 10.1145/96602.96604
+Rothnie et al. 1980, SDD-1 (ACM TODS 5(1)):
+  citation: Rothnie, J. B., Bernstein, P. A., Fox, S., Goodman, N., Hammer, M., Landers, T. A., Reeve, C., Shipman, D. W.,
+    & Wong, E. (1980). Introduction to a system for distributed databases (SDD-1). ACM Transactions on Database Systems,
+    5(1), 1–17.
+  doi: 10.1145/320128.320129
+Bernstein & Chiu 1981, Using Semi-Joins to Solve Relational Queries (JACM 28(1)):
+  citation: Bernstein, P. A., & Chiu, D.-M. W. (1981). Using semi-joins to solve relational queries. Journal of the ACM,
+    28(1), 25–40.
+  doi: 10.1145/322234.322238
+Özsu & Valduriez 2020, Principles of Distributed Database Systems, ch. 1:
+  citation: Özsu, M. T., & Valduriez, P. (2020). Introduction. In Principles of distributed database systems (4th ed., pp.
+    1–31). Springer.
+  doi: 10.1007/978-3-030-26253-2_1
+Ceri, Negri & Pelagatti 1982, Horizontal Data Partitioning in Database Design (SIGMOD):
+  citation: Ceri, S., Negri, M., & Pelagatti, G. (1982). Horizontal data partitioning in database design. In Proceedings
+    of the 1982 ACM SIGMOD International Conference on Management of Data (SIGMOD '82) (pp. 128–136). ACM.
+  doi: 10.1145/582353.582376
+Curino et al. 2010, Schism (PVLDB 3(1)):
+  citation: 'Curino, C., Jones, E., Zhang, Y., & Madden, S. (2010). Schism: A workload-driven approach to database replication
+    and partitioning. Proceedings of the VLDB Endowment, 3(1–2), 48–57.'
+  doi: 10.14778/1920841.1920853
+  free_url: https://www.vldb.org/pvldb/vol3/R04.pdf
+Pavlo, Curino & Zdonik 2012, Skew-Aware Automatic Database Partitioning (SIGMOD):
+  citation: Pavlo, A., Curino, C., & Zdonik, S. (2012). Skew-aware automatic database partitioning in shared-nothing, parallel
+    OLTP systems. In Proceedings of the 2012 ACM SIGMOD International Conference on Management of Data (SIGMOD '12) (pp.
+    61–72). ACM.
+  doi: 10.1145/2213836.2213844
+  free_url: https://hstore.cs.brown.edu/papers/hstore-partitioning.pdf
+'Cubukcu et al. 2021, Citus: Distributed PostgreSQL (SIGMOD)':
+  citation: 'Cubukcu, U., Erdogan, O., Pathak, S., Sannakkayala, S., & Slot, M. (2021). Citus: Distributed PostgreSQL for
+    data-intensive applications. In Proceedings of the 2021 International Conference on Management of Data (SIGMOD ''21)
+    (pp. 2490–2502). ACM.'
+  doi: 10.1145/3448016.3457551
+Özsu & Valduriez 2020, Principles of Distributed Database Systems, ch. 2:
+  citation: Özsu, M. T., & Valduriez, P. (2020). Distributed and parallel database design. In Principles of distributed
+    database systems (4th ed., pp. 33–89). Springer.
+  doi: 10.1007/978-3-030-26253-2_2
+Navathe et al. 1984, Vertical Partitioning Algorithms for Database Design (ACM TODS 9(4)):
+  citation: Navathe, S., Ceri, S., Wiederhold, G., & Dou, J. (1984). Vertical partitioning algorithms for database design.
+    ACM Transactions on Database Systems, 9(4), 680–710.
+  doi: 10.1145/1994.2209
+Abadi, Madden & Hachem 2008, Column-Stores vs. Row-Stores (SIGMOD):
+  citation: 'Abadi, D. J., Madden, S. R., & Hachem, N. (2008). Column-stores vs. row-stores: How different are they really?
+    In Proceedings of the 2008 ACM SIGMOD International Conference on Management of Data (SIGMOD ''08) (pp. 967–980). ACM.'
+  doi: 10.1145/1376616.1376712
+  free_url: https://www.cs.umd.edu/~abadi/papers/abadi-sigmod08.pdf
+? McCormick, Schweitzer & White 1972, Problem Decomposition and Data Reorganization by a Clustering Technique (Operations
+  Research 20(5))
+: citation: McCormick, W. T., Schweitzer, P. J., & White, T. W. (1972). Problem decomposition and data reorganization by
+    a clustering technique. Operations Research, 20(5), 993–1009.
+  doi: 10.1287/opre.20.5.993
+Agrawal, Narasayya & Yang 2004, Integrating Vertical and Horizontal Partitioning (SIGMOD):
+  citation: Agrawal, S., Narasayya, V., & Yang, B. (2004). Integrating vertical and horizontal partitioning into automated
+    physical database design. In Proceedings of the 2004 ACM SIGMOD International Conference on Management of Data (SIGMOD
+    '04) (pp. 359–370). ACM.
+  doi: 10.1145/1007568.1007609
+  free_url: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/partitioning.pdf
+Stonebraker et al. 2005, C-Store (VLDB):
+  citation: 'Stonebraker, M., Abadi, D. J., Batkin, A., Chen, X., Cherniack, M., Ferreira, M., Lau, E., Lin, A., Madden,
+    S., O''Neil, E., O''Neil, P., Rasin, A., Tran, N., & Zdonik, S. (2005). C-Store: A column-oriented DBMS. In Proceedings
+    of the 31st International Conference on Very Large Data Bases (VLDB 2005) (pp. 553–564).'
+  free_url: https://www.vldb.org/archives/website/2005/program/paper/thu/p553-stonebraker.pdf
+Chaudhuri & Dayal 1997, An Overview of Data Warehousing and OLAP Technology (SIGMOD Record 26(1)):
+  citation: Chaudhuri, S., & Dayal, U. (1997). An overview of data warehousing and OLAP technology. ACM SIGMOD Record, 26(1),
+    65–74.
+  doi: 10.1145/248603.248616
+  free_url: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/sigrecord.pdf
+Gray et al. 1997, Data Cube (Data Mining and Knowledge Discovery 1(1)):
+  citation: 'Gray, J., Chaudhuri, S., Bosworth, A., Layman, A., Reichart, D., Venkatrao, M., Pellow, F., & Pirahesh, H.
+    (1997). Data cube: A relational aggregation operator generalizing group-by, cross-tab, and sub-totals. Data Mining and
+    Knowledge Discovery, 1(1), 29–53.'
+  doi: 10.1023/A:1009726021843
+  free_url: https://arxiv.org/abs/cs/0701155
+Harinarayan, Rajaraman & Ullman 1996, Implementing Data Cubes Efficiently (SIGMOD):
+  citation: Harinarayan, V., Rajaraman, A., & Ullman, J. D. (1996). Implementing data cubes efficiently. In Proceedings
+    of the 1996 ACM SIGMOD International Conference on Management of Data (SIGMOD '96) (pp. 205–216). ACM.
+  doi: 10.1145/233269.233333
+Zhao, Deshpande & Naughton 1997, An Array-Based Algorithm for Simultaneous Multidimensional Aggregates (SIGMOD):
+  citation: Zhao, Y., Deshpande, P. M., & Naughton, J. F. (1997). An array-based algorithm for simultaneous multidimensional
+    aggregates. In Proceedings of the 1997 ACM SIGMOD International Conference on Management of Data (SIGMOD '97) (pp. 159–170).
+    ACM.
+  doi: 10.1145/253260.253288
+Beyer & Ramakrishnan 1999, Bottom-Up Computation of Sparse and Iceberg CUBEs (SIGMOD):
+  citation: Beyer, K., & Ramakrishnan, R. (1999). Bottom-up computation of sparse and iceberg CUBEs. In Proceedings of the
+    1999 ACM SIGMOD International Conference on Management of Data (SIGMOD '99) (pp. 359–370). ACM.
+  doi: 10.1145/304182.304214
+Kimball & Ross 2013, The Data Warehouse Toolkit, ch. 1–3:
+  citation: 'Kimball, R., & Ross, M. (2013). The data warehouse toolkit: The definitive guide to dimensional modeling (3rd
+    ed., Chs. 1–3). Wiley.'
+  url: https://www.wiley.com/en-us/The+Data+Warehouse+Toolkit%3A+The+Definitive+Guide+to+Dimensional+Modeling%2C+3rd+Edition-p-9781118530801
+Dean & Ghemawat 2004, MapReduce (OSDI):
+  citation: 'Dean, J., & Ghemawat, S. (2004). MapReduce: Simplified data processing on large clusters. In Proceedings of
+    the 6th Symposium on Operating Systems Design and Implementation (OSDI ''04) (pp. 137–150). USENIX Association.'
+  url: https://www.usenix.org/conference/osdi-04/mapreduce-simplified-data-processing-large-clusters
+  free_url: https://www.usenix.org/legacy/events/osdi04/tech/full_papers/dean/dean.pdf
+Zaharia et al. 2012, Resilient Distributed Datasets (NSDI):
+  citation: 'Zaharia, M., Chowdhury, M., Das, T., Dave, A., Ma, J., McCauley, M., Franklin, M. J., Shenker, S., & Stoica,
+    I. (2012). Resilient distributed datasets: A fault-tolerant abstraction for in-memory cluster computing. In Proceedings
+    of the 9th USENIX Symposium on Networked Systems Design and Implementation (NSDI ''12) (pp. 15–28). USENIX Association.'
+  url: https://www.usenix.org/conference/nsdi12/technical-sessions/presentation/zaharia
+  free_url: https://www.usenix.org/system/files/conference/nsdi12/nsdi12-final138.pdf
+Armbrust et al. 2021, Lakehouse (CIDR):
+  citation: 'Armbrust, M., Ghodsi, A., Xin, R., & Zaharia, M. (2021). Lakehouse: A new generation of open platforms that
+    unify data warehousing and advanced analytics. In Proceedings of the 11th Conference on Innovative Data Systems Research
+    (CIDR ''21).'
+  url: https://www.cidrdb.org/cidr2021/
+  free_url: https://www.cidrdb.org/cidr2021/papers/cidr2021_paper17.pdf
+Ghemawat, Gobioff & Leung 2003, The Google File System (SOSP):
+  citation: Ghemawat, S., Gobioff, H., & Leung, S.-T. (2003). The Google file system. In Proceedings of the 19th ACM Symposium
+    on Operating Systems Principles (SOSP '03) (pp. 29–43). ACM.
+  doi: 10.1145/945445.945450
+  free_url: https://research.google.com/archive/gfs-sosp2003.pdf
+Kreps, Narkhede & Rao 2011, Kafka (NetDB):
+  citation: 'Kreps, J., Narkhede, N., & Rao, J. (2011). Kafka: A distributed messaging system for log processing. In Proceedings
+    of the NetDB Workshop (NetDB ''11), Athens, Greece.'
+  free_url: https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/Kafka.pdf
+Laney 2001, 3D Data Management (META Group):
+  citation: 'Laney, D. (2001, February 6). 3D data management: Controlling data volume, velocity, and variety [Research
+    note]. META Group.'
+  url: https://community.aiim.org/blogs/doug-laney/2012/08/25/deja-vvvu-gartners-original-volume-velocity-variety-definition-of-big-data
+DeCandia et al. 2007, Dynamo (SOSP):
+  citation: 'DeCandia, G., Hastorun, D., Jampani, M., Kakulapati, G., Lakshman, A., Pilchin, A., Sivasubramanian, S., Vosshall,
+    P., & Vogels, W. (2007). Dynamo: Amazon''s highly available key-value store. In Proceedings of the 21st ACM SIGOPS Symposium
+    on Operating Systems Principles (SOSP ''07) (pp. 205–220). ACM.'
+  doi: 10.1145/1294261.1294281
+  free_url: https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf
+Chang et al. 2006, Bigtable (OSDI):
+  citation: 'Chang, F., Dean, J., Ghemawat, S., Hsieh, W. C., Wallach, D. A., Burrows, M., Chandra, T., Fikes, A., & Gruber,
+    R. E. (2006). Bigtable: A distributed storage system for structured data. In Proceedings of the 7th Symposium on Operating
+    Systems Design and Implementation (OSDI ''06) (pp. 205–218). USENIX Association.'
+  url: https://www.usenix.org/conference/osdi-06/bigtable-distributed-storage-system-structured-data
+  free_url: https://www.usenix.org/legacy/event/osdi06/tech/chang/chang.pdf
+Brewer 2012, CAP Twelve Years Later (IEEE Computer 45(2)):
+  citation: 'Brewer, E. (2012). CAP twelve years later: How the "rules" have changed. Computer, 45(2), 23–29.'
+  doi: 10.1109/MC.2012.37
+  free_url: https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/
+Lakshman & Malik 2010, Cassandra (ACM SIGOPS OSR 44(2)):
+  citation: 'Lakshman, A., & Malik, P. (2010). Cassandra: A decentralized structured storage system. ACM SIGOPS Operating
+    Systems Review, 44(2), 35–40.'
+  doi: 10.1145/1773912.1773922
+  free_url: https://www.cs.cornell.edu/projects/ladis2009/papers/lakshman-ladis2009.pdf
+Corbett et al. 2012, Spanner (OSDI):
+  citation: 'Corbett, J. C., Dean, J., Epstein, M., Fikes, A., Frost, C., Furman, J. J., Ghemawat, S., Gubarev, A., Heiser,
+    C., Hochschild, P., Hsieh, W., Kanthak, S., Kogan, E., Li, H., Lloyd, A., Melnik, S., Mwaura, D., Nagle, D., Quinlan,
+    S., . . . Woodford, D. (2012). Spanner: Google''s globally-distributed database. In Proceedings of the 10th USENIX Symposium
+    on Operating Systems Design and Implementation (OSDI ''12) (pp. 251–264). USENIX Association.'
+  url: https://www.usenix.org/conference/osdi12/technical-sessions/presentation/corbett
+  free_url: https://www.usenix.org/system/files/conference/osdi12/osdi12-final-16.pdf
+Cattell 2010, Scalable SQL and NoSQL Data Stores (SIGMOD Record 39(4)):
+  citation: Cattell, R. (2010). Scalable SQL and NoSQL data stores. ACM SIGMOD Record, 39(4), 12–27.
+  doi: 10.1145/1978915.1978919
+  free_url: https://sigmodrecord.org/publications/sigmodRecord/1012/pdfs/04.surveys.cattell.pdf
+Mikolov et al. 2013, Efficient Estimation of Word Representations in Vector Space (arXiv:1301.3781):
+  citation: Mikolov, T., Chen, K., Corrado, G., & Dean, J. (2013). Efficient estimation of word representations in vector
+    space. arXiv:1301.3781.
+  doi: 10.48550/arXiv.1301.3781
+  free_url: https://arxiv.org/abs/1301.3781
+# open licence: CC BY 4.0 (ACL Anthology)
+Reimers & Gurevych 2019, Sentence-BERT (EMNLP-IJCNLP):
+  citation: 'Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. In Proceedings
+    of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference
+    on Natural Language Processing (EMNLP-IJCNLP) (pp. 3982–3992). Association for Computational Linguistics.'
+  doi: 10.18653/v1/D19-1410
+  free_url: https://aclanthology.org/D19-1410/
+Pan, Wang & Li 2024, Survey of Vector Database Management Systems (VLDB Journal 33):
+  citation: Pan, J. J., Wang, J., & Li, G. (2024). Survey of vector database management systems. The VLDB Journal, 33(5),
+    1591–1615.
+  doi: 10.1007/s00778-024-00864-x
+  free_url: https://arxiv.org/abs/2310.14021
+# open licence: CC BY 4.0 (licence in the publisher's Crossref record)
+Wang et al. 2021, Milvus (SIGMOD):
+  citation: 'Wang, J., Yi, X., Guo, R., Jin, H., Xu, P., Li, S., Wang, X., Guo, X., Li, C., Xu, X., Yu, K., Yuan, Y., Zou,
+    Y., Long, J., Cai, Y., Li, Z., Zhang, Z., Mo, Y., Gu, J., . . . Xie, C. (2021). Milvus: A purpose-built vector data
+    management system. In Proceedings of the 2021 International Conference on Management of Data (SIGMOD ''21) (pp. 2614–2627).
+    ACM.'
+  doi: 10.1145/3448016.3457550
+  free_url: https://www.cs.purdue.edu/homes/csjgwang/pubs/SIGMOD21_Milvus.pdf
+# open licence: CC BY-NC-SA 3.0 (ACL Anthology, pre-2016 material)
+Pennington, Socher & Manning 2014, GloVe (EMNLP):
+  citation: 'Pennington, J., Socher, R., & Manning, C. D. (2014). GloVe: Global vectors for word representation. In Proceedings
+    of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP) (pp. 1532–1543). Association for
+    Computational Linguistics.'
+  doi: 10.3115/v1/D14-1162
+  free_url: https://aclanthology.org/D14-1162/
+Radford et al. 2021, CLIP (ICML):
+  citation: Radford, A., Kim, J. W., Hallacy, C., Ramesh, A., Goh, G., Agarwal, S., Sastry, G., Askell, A., Mishkin, P.,
+    Clark, J., Krueger, G., & Sutskever, I. (2021). Learning transferable visual models from natural language supervision.
+    In Proceedings of the 38th International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol.
+    139, pp. 8748–8763). PMLR.
+  url: https://proceedings.mlr.press/v139/radford21a.html
+  free_url: https://proceedings.mlr.press/v139/radford21a/radford21a.pdf
+Malkov & Yashunin 2020, HNSW (IEEE TPAMI 42(4)):
+  citation: Malkov, Y. A., & Yashunin, D. A. (2020). Efficient and robust approximate nearest neighbor search using hierarchical
+    navigable small world graphs. IEEE Transactions on Pattern Analysis and Machine Intelligence, 42(4), 824–836.
+  doi: 10.1109/TPAMI.2018.2889473
+  free_url: https://arxiv.org/abs/1603.09320
+Jégou, Douze & Schmid 2011, Product Quantization for Nearest Neighbor Search (IEEE TPAMI 33(1)):
+  citation: Jégou, H., Douze, M., & Schmid, C. (2011). Product quantization for nearest neighbor search. IEEE Transactions
+    on Pattern Analysis and Machine Intelligence, 33(1), 117–128.
+  doi: 10.1109/TPAMI.2010.57
+  free_url: https://inria.hal.science/inria-00514462
+Johnson, Douze & Jégou 2021, Billion-Scale Similarity Search with GPUs (IEEE Trans. Big Data 7(3)):
+  citation: Johnson, J., Douze, M., & Jégou, H. (2021). Billion-scale similarity search with GPUs. IEEE Transactions on
+    Big Data, 7(3), 535–547.
+  doi: 10.1109/TBDATA.2019.2921572
+  free_url: https://arxiv.org/abs/1702.08734
+Subramanya et al. 2019, DiskANN (NeurIPS):
+  citation: 'Jayaram Subramanya, S., Devvrit, Kadekodi, R., Krishnaswamy, R., & Simhadri, H. V. (2019). DiskANN: Fast accurate
+    billion-point nearest neighbor search on a single node. In Advances in Neural Information Processing Systems 32 (NeurIPS
+    2019).'
+  url: https://proceedings.neurips.cc/paper/2019/hash/09853c7fb1d3f8ee67a61b6bf4a7f8e6-Abstract.html
+  free_url: https://proceedings.neurips.cc/paper_files/paper/2019/file/09853c7fb1d3f8ee67a61b6bf4a7f8e6-Paper.pdf
+# open licence: CC BY 4.0 (arXiv preprint only; the Elsevier version is not open)
+Aumüller, Bernhardsson & Faithfull 2020, ANN-Benchmarks (Information Systems 87):
+  citation: 'Aumüller, M., Bernhardsson, E., & Faithfull, A. (2020). ANN-Benchmarks: A benchmarking tool for approximate
+    nearest neighbor algorithms. Information Systems, 87, 101374.'
+  doi: 10.1016/j.is.2019.02.006
+  free_url: https://arxiv.org/abs/1807.05614
+Lewis et al. 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (NeurIPS):
+  citation: Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Küttler, H., Lewis, M., Yih, W.-t.,
+    Rocktäschel, T., Riedel, S., & Kiela, D. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. In
+    Advances in Neural Information Processing Systems 33 (pp. 9459–9474).
+  url: https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html
+  free_url: https://proceedings.neurips.cc/paper_files/paper/2020/file/6b493230205f780e1bc26945df7481e5-Paper.pdf
+# open licence: CC BY 4.0 (ACL Anthology)
+Karpukhin et al. 2020, Dense Passage Retrieval (EMNLP):
+  citation: Karpukhin, V., Oğuz, B., Min, S., Lewis, P., Wu, L., Edunov, S., Chen, D., & Yih, W.-t. (2020). Dense passage
+    retrieval for open-domain question answering. In Proceedings of the 2020 Conference on Empirical Methods in Natural
+    Language Processing (EMNLP) (pp. 6769–6781). Association for Computational Linguistics.
+  doi: 10.18653/v1/2020.emnlp-main.550
+  free_url: https://aclanthology.org/2020.emnlp-main.550/
+Koren, Bell & Volinsky 2009, Matrix Factorization Techniques for Recommender Systems (IEEE Computer 42(8)):
+  citation: Koren, Y., Bell, R., & Volinsky, C. (2009). Matrix factorization techniques for recommender systems. Computer,
+    42(8), 30–37.
+  doi: 10.1109/MC.2009.263
+'Gao et al. 2023, Retrieval-Augmented Generation for Large Language Models: A Survey (arXiv:2312.10997)':
+  citation: 'Gao, Y., Xiong, Y., Gao, X., Jia, K., Pan, J., Bi, Y., Dai, Y., Sun, J., Wang, M., & Wang, H. (2023). Retrieval-augmented
+    generation for large language models: A survey. arXiv:2312.10997.'
+  doi: 10.48550/arXiv.2312.10997
+  free_url: https://arxiv.org/abs/2312.10997
+# open licence: CC BY 4.0 (ACL Anthology)
+Es et al. 2024, RAGAs (EACL demos):
+  citation: 'Es, S., James, J., Espinosa Anke, L., & Schockaert, S. (2024). RAGAs: Automated evaluation of retrieval augmented
+    generation. In Proceedings of the 18th Conference of the European Chapter of the Association for Computational Linguistics:
+    System Demonstrations (pp. 150–158). Association for Computational Linguistics.'
+  doi: 10.18653/v1/2024.eacl-demo.16
+  free_url: https://aclanthology.org/2024.eacl-demo.16/
+# open licence: CC BY-NC-ND 4.0 (licence in the publisher's Crossref record)
+Covington, Adams & Sargin 2016, Deep Neural Networks for YouTube Recommendations (RecSys):
+  citation: Covington, P., Adams, J., & Sargin, E. (2016). Deep neural networks for YouTube recommendations. In Proceedings
+    of the 10th ACM Conference on Recommender Systems (RecSys '16) (pp. 191–198). ACM.
+  doi: 10.1145/2959100.2959190
+  free_url: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45530.pdf

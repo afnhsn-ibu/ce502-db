@@ -1,0 +1,37 @@
+# Baseline of the starter template (offline hash embeddings, CHUNK_SIZE=500, CHUNK_OVERLAP=100, TOP_K=4, sample data)
+embedding mode: hash (384 dims)
+3 documents -> 9 chunks stored (chunk size 500, overlap 100)
+
+$ python src/eval.py
+embedding mode: hash (384 dims)
+ok   What percentage of the grade is the final project?
+@2   What is the minimum score to pass the course?
+ok   What happens if a lab is submitted 3 days late?
+ok   Can I ask for an extension?
+ok   Can quizzes be taken late?
+ok   Is it allowed to use AI assistants?
+ok   What counts as plagiarism?
+ok   Can I bring notes to the midterm?
+ok   How long is the midterm exam?
+ok   Which weeks does the midterm cover?
+@3   Which tools are used in the labs?
+ok   Do I need Docker?
+ok   When are office hours?
+ok   Where do I post questions about labs?
+ok   How many students are in a project team?
+ok   When is the project proposal due?
+@2   How long is the final project presentation?
+@3   How long is the careers report?
+@2   Who reviews the careers report?
+@2   What topics does the course cover?
+
+recall@1=0.70  recall@3=1.00  recall@5=1.00  MRR=0.83  (n=20)
+
+$ python src/eval.py --settings 300:60,500:100,800:0
+embedding mode: hash (384 dims)
+
+chunk size  overlap  chunks  recall@1  recall@3  recall@5    MRR
+       300       60      16      0.75      1.00      1.00   0.87
+       500      100       9      0.70      1.00      1.00   0.83
+       800        0       6      0.70      1.00      1.00   0.83
+(n = 20 labelled questions)

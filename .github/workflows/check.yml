@@ -1,0 +1,24 @@
+name: Check site is up to date
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: python3 tools/build_site.py
+      - name: Fail if docs/ was not rebuilt from course.yml and kit/
+        run: git diff --exit-code docs/ || (echo "Run tools/build_site.py and commit docs/." && exit 1)
+      - name: Fail if instructor material is public
+        run: |
+          if find . -path ./.git -prune -o \( -iname '*solution*' -o -iname '*-key.md' -o -iname '*marking*' -o -name instructor -o -name sample-output \) -print | grep .; then
+            echo "Instructor material found in the public repository." && exit 1
+          fi

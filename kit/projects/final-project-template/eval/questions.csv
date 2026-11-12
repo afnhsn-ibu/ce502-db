@@ -1,0 +1,21 @@
+question,expected_source
+What percentage of the grade is the final project?,policies.md
+What is the minimum score to pass the course?,policies.md
+What happens if a lab is submitted 3 days late?,policies.md
+Can I ask for an extension?,policies.md
+Can quizzes be taken late?,policies.md
+Is it allowed to use AI assistants?,policies.md
+What counts as plagiarism?,policies.md
+Can I bring notes to the midterm?,exams-and-labs.md
+How long is the midterm exam?,exams-and-labs.md
+Which weeks does the midterm cover?,exams-and-labs.md
+Which tools are used in the labs?,exams-and-labs.md
+Do I need Docker?,exams-and-labs.md
+When are office hours?,exams-and-labs.md
+Where do I post questions about labs?,exams-and-labs.md
+How many students are in a project team?,projects.md
+When is the project proposal due?,projects.md
+How long is the final project presentation?,projects.md
+How long is the careers report?,projects.md
+Who reviews the careers report?,projects.md
+What topics does the course cover?,projects.md

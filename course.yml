@@ -1,0 +1,343 @@
+course:
+  code: "CE 502"
+  title: "Advanced Topics in Database Systems"
+  institution: "International Balkan University"
+  city: "Skopje"
+  level: "Graduate (Master's)"
+  semester: "[Semester]"
+  instructor: "Dr. Afan HASAN"
+  instructor_page: "https://aps.hello.ibu.edu.mk/afan.hasan/"
+  orcid: "https://orcid.org/0000-0002-1177-1711"
+  repo: "https://github.com/afnhsn-ibu/ce502-db"
+  repo_slug: "afnhsn-ibu/ce502-db"
+  site: "https://afnhsn-ibu.github.io/ce502-db/"
+  # Weeks up to this number show their slides and lab links; later weeks say "coming soon".
+  # tools/sync_kit.py also copies only these weeks' labs into kit/.
+  released_through: 5
+  blurb: >-
+    Twelve weeks that follow one path: how a single database survives crashes
+    and concurrent users, how one database becomes many, what changes for
+    analytics and scale, and how databases search by meaning in the AI era.
+  story: ["one database", "many databases", "analytics and scale", "AI-era databases"]
+  meeting: "One session of about three hours each week: three 45-minute lessons and a practice."
+  tools: "Docker, PostgreSQL 16 with pgvector, MongoDB 7, Cassandra 5, Chroma, DuckDB and Python 3."
+
+assessment:
+  - item: "Practices (labs)"
+    weight: "[__%]"
+    detail: "11 practices, 10 points each, started in class and finished as homework. The Week 12 lab is the base of the final project."
+  - item: "Quizzes"
+    weight: "[__%]"
+    detail: "15–16 multiple-choice questions (+1 short design question from Week 2), 25–30 minutes."
+  - item: "Assignments"
+    weight: "[__%]"
+    detail: "Careers, Data Warehouse Design, Big Data Architecture and Solving the Relational Problem: 20 points each, most peer-reviewed."
+  - item: "Midterm exam"
+    weight: "[__%]"
+    detail: "Weeks 1–6: concepts, a schedule trace, a design and computations."
+  - item: "Final project"
+    weight: "[__%]"
+    detail: "A RAG application or recommender on a vector database, in teams of 2–3. 100 points."
+  - item: "Participation"
+    weight: "[__%]"
+    detail: "Scenario work in pairs, Check Your Understanding votes and paper notes."
+
+# Graded work outside the weekly practice and quiz. file: path inside kit/.
+assignments:
+  - title: "Careers Assignment – Map One Career Path"
+    file: "assignments/careers-assignment.md"
+    extra: [["Peer review form", "assignments/careers-peer-review-form.md"]]
+    set: 1
+    due: "Week 3"
+    points: "20"
+    summary: "Pick one data career, analyse real job adverts and map the skills this course builds. Peer-reviewed."
+  - title: "Sample Midterm (Weeks 1–6)"
+    file: "exams/midterm-sample.md"
+    set: 6
+    due: "Week 6"
+    points: "100"
+    summary: "Same structure as the real midterm: concepts, a schedule trace, a design and computations."
+  - title: "Data Warehouse Design Project"
+    file: "assignments/dw-project.md"
+    set: 7
+    due: "[date]"
+    points: "20"
+    summary: "Design a star schema for a given business, define the grain and measures, and write the OLAP queries."
+  - title: "Big Data Project – An Architecture Proposal"
+    file: "assignments/bigdata-assignment.md"
+    set: 8
+    due: "[date]"
+    points: "20"
+    summary: "Propose a big data architecture for a real scenario and justify every layer. Peer-reviewed."
+  - title: "Assignment · Solving the Relational Problem"
+    file: "assignments/relational-problem-assignment.md"
+    set: 9
+    due: "[date]"
+    points: "20"
+    summary: "Argue how a system should scale beyond one relational server, with an architecture diagram. Peer-reviewed."
+  - title: "Final Project · An AI Application on a Vector Database"
+    file: "projects/final-project.md"
+    extra: [["Starter code", "projects/final-project-template/"], ["Presentation checklist", "projects/presentation-checklist.md"]]
+    set: 10
+    due: "Week 12"
+    points: "100"
+    summary: "Build a RAG application or recommender on a vector database, evaluate it and present it in Week 12."
+
+# Shown in the schedule "Due" column and on the week page.
+milestones:
+  1: "Careers assignment set"
+  3: "Careers assignment due"
+  6: "Midterm exam"
+  7: "DW design project set"
+  8: "Big data assignment set"
+  9: "Relational problem assignment set"
+  10: "Final project set"
+  12: "Final project presentations"
+
+books:
+  - citation: "Özsu, M. T., & Valduriez, P. (2020). Principles of Distributed Database Systems (4th ed.). Springer."
+    weeks: "Weeks 4–6"
+    free: null
+    links:
+      - ["DOI 10.1007/978-3-030-26253-2", "https://doi.org/10.1007/978-3-030-26253-2"]
+  - citation: "Han, J., Kamber, M., & Pei, J. (2012). Data Mining: Concepts and Techniques (3rd ed.). Morgan Kaufmann. Chapters 4–5."
+    weeks: "Week 7"
+    free: null
+    links:
+      - ["Publisher page", "https://www.sciencedirect.com/book/9780123814791/data-mining-concepts-and-techniques"]
+  - citation: "Kimball, R., & Ross, M. (2013). The Data Warehouse Toolkit: The Definitive Guide to Dimensional Modeling (3rd ed.). Wiley. Chapters 1–3."
+    weeks: "Week 7"
+    free: null
+    links:
+      - ["Publisher page", "https://www.wiley.com/en-us/The+Data+Warehouse+Toolkit%3A+The+Definitive+Guide+to+Dimensional+Modeling%2C+3rd+Edition-p-9781118530801"]
+
+weeks:
+  - num: 1
+    title: "Why Databases Matter & Transaction Logging"
+    purpose: "Why organisations cannot afford to lose a database, the careers built around protecting data, and the log that lets a DBMS survive a crash."
+    lessons:
+      - ["1-1", "Course Introduction and Careers"]
+      - ["1-2", "Database Management Challenges"]
+      - ["1-3", "Transaction Logging"]
+      - ["1-4", "Transaction Control"]
+    practice: "Inside the WAL: watch the log at work"
+    services: "PostgreSQL"
+    lab: "week01"
+    deck: "CE502_W01_Why_Databases_Matter_Transaction_Logging"
+    reading_guide: "readings/week01-reading-guide.md"
+    required:
+      - "Codd 1970, A Relational Model of Data for Large Shared Data Banks (CACM 13(6))"
+      - "Haerder & Reuter 1983, Principles of Transaction-Oriented Database Recovery (ACM Computing Surveys 15(4))"
+      - "Mohan et al. 1992, ARIES (ACM TODS 17(1))"
+    optional:
+      - "Gray 1981, The Transaction Concept (VLDB)"
+      - "Stonebraker & Pavlo 2024, What Goes Around Comes Around… And Around… (SIGMOD Record 53(2))"
+      - "Keshav 2007, How to Read a Paper (SIGCOMM CCR 37(3))"
+  - num: 2
+    title: "Backup, Recovery & Replication"
+    purpose: "How a database administrator makes sure data is never lost, and how a database survives the loss of a whole server."
+    lessons:
+      - ["2-1", "Database Backups"]
+      - ["2-2", "Replication and High Availability"]
+      - ["2-3", "Database Recovery"]
+    practice: "You are the DBA during an incident: dump, restore and point-in-time recovery"
+    services: "PostgreSQL (+ replica for the demo)"
+    lab: "week02"
+    deck: "CE502_W02_Backup_Recovery_Replication"
+    reading_guide: "readings/week02-reading-guide.md"
+    activity: ["Case study: the University Registry", "activities/week02-case-study-registry.md"]
+    required:
+      - "Gray et al. 1996, The Dangers of Replication and a Solution (SIGMOD)"
+      - "Verbitski et al. 2017, Amazon Aurora (SIGMOD)"
+      - "Ongaro & Ousterhout 2014, Raft (USENIX ATC)"
+    optional:
+      - "Patterson, Gibson & Katz 1988, RAID (SIGMOD)"
+      - "Kemme & Alonso 2000, Postgres-R (VLDB)"
+      - "Bernstein, Hadzilacos & Goodman 1987, Concurrency Control and Recovery in Database Systems, ch. 6–8"
+  - num: 3
+    title: "Concurrency Control & ACID"
+    purpose: "What happens when many users change the same data at the same time, and how a DBMS keeps their transactions from damaging each other."
+    lessons:
+      - ["3-1", "Concurrency Problems"]
+      - ["3-2", "Locking and Deadlocks"]
+      - ["3-3", "ACID and Isolation Levels"]
+    practice: "Race yourself: two sessions, one database"
+    services: "PostgreSQL + Python"
+    lab: "week03"
+    deck: "CE502_W03_Concurrency_Control_ACID"
+    required:
+      - "Eswaran et al. 1976, Consistency and Predicate Locks (CACM 19(11))"
+      - "Berenson et al. 1995, A Critique of ANSI SQL Isolation Levels (SIGMOD)"
+      - "Ports & Grittner 2012, Serializable Snapshot Isolation in PostgreSQL (PVLDB 5(12))"
+    optional:
+      - "Kung & Robinson 1981, On Optimistic Methods for Concurrency Control (ACM TODS 6(2))"
+      - "Cahill, Röhm & Fekete 2008, Serializable Isolation for Snapshot Databases (SIGMOD)"
+      - "Adya, Liskov & O'Neil 2000, Generalized Isolation Level Definitions (ICDE)"
+  - num: 4
+    title: "Distributed Database Systems"
+    purpose: "What changes when one database lives at many sites, what the system must hide from its users, and the algebra we use to split and rebuild tables."
+    lessons:
+      - ["4-1", "What a Distributed Database Is"]
+      - ["4-2", "Transparency and Architecture"]
+      - ["4-3", "Relational Algebra for Distribution"]
+    practice: "Build and query a two-site database"
+    services: "PostgreSQL (postgres_fdw)"
+    lab: "week04"
+    deck: "CE502_W04_Distributed_Database_Systems"
+    required:
+      - "Stonebraker 1986, The Case for Shared Nothing (IEEE Database Eng. Bull. 9(1))"
+      - "DeWitt & Gray 1992, Parallel Database Systems (CACM 35(6))"
+      - "Sheth & Larson 1990, Federated Database Systems (ACM Computing Surveys 22(3))"
+    optional:
+      - "Rothnie et al. 1980, SDD-1 (ACM TODS 5(1))"
+      - "Bernstein & Chiu 1981, Using Semi-Joins to Solve Relational Queries (JACM 28(1))"
+      - "Özsu & Valduriez 2020, Principles of Distributed Database Systems, ch. 1"
+  - num: 5
+    title: "Horizontal Fragmentation"
+    purpose: "How to cut a table into groups of rows, so that each piece is stored where it is used and still adds up to the whole table."
+    lessons:
+      - ["5-1", "Distributed Design and Correctness"]
+      - ["5-2", "Primary Horizontal Fragmentation"]
+      - ["5-3", "Derived Horizontal Fragmentation"]
+    practice: "Fragments as partitions: from minterms to PostgreSQL"
+    services: "PostgreSQL + Python"
+    lab: "week05"
+    deck: "CE502_W05_Horizontal_Fragmentation"
+    required:
+      - "Ceri, Negri & Pelagatti 1982, Horizontal Data Partitioning in Database Design (SIGMOD)"
+      - "Curino et al. 2010, Schism (PVLDB 3(1))"
+    optional:
+      - "Pavlo, Curino & Zdonik 2012, Skew-Aware Automatic Database Partitioning (SIGMOD)"
+      - "Cubukcu et al. 2021, Citus: Distributed PostgreSQL (SIGMOD)"
+      - "Özsu & Valduriez 2020, Principles of Distributed Database Systems, ch. 2"
+  - num: 6
+    title: "Vertical Fragmentation & Midterm Review"
+    purpose: "How to split a table by columns when no one can try every design, and how the first six weeks fit together."
+    lessons:
+      - ["6-1", "Why Vertical Fragmentation Is Hard"]
+      - ["6-2", "The Bond Energy Algorithm"]
+      - ["6-3", "Choosing the Split and Midterm Review"]
+    practice: "Bond energy in Python and SQL"
+    services: "Python (pytest) + PostgreSQL"
+    lab: "week06"
+    deck: "CE502_W06_Vertical_Fragmentation_Midterm_Review"
+    required:
+      - "Navathe et al. 1984, Vertical Partitioning Algorithms for Database Design (ACM TODS 9(4))"
+      - "Abadi, Madden & Hachem 2008, Column-Stores vs. Row-Stores (SIGMOD)"
+    optional:
+      - "McCormick, Schweitzer & White 1972, Problem Decomposition and Data Reorganization by a Clustering Technique (Operations Research 20(5))"
+      - "Agrawal, Narasayya & Yang 2004, Integrating Vertical and Horizontal Partitioning (SIGMOD)"
+      - "Stonebraker et al. 2005, C-Store (VLDB)"
+  - num: 7
+    title: "Data Warehousing & Data Cubes"
+    purpose: "How organisations turn years of transactions from many systems into answers for decision makers."
+    lessons:
+      - ["7-1", "Data Warehouses and OLTP vs OLAP"]
+      - ["7-2", "Dimensional Modelling"]
+      - ["7-3", "Data Cubes and OLAP Operations"]
+    practice: "From OLTP to a star schema and a cube"
+    services: "PostgreSQL + Python"
+    lab: "week07"
+    deck: "CE502_W07_Data_Warehousing_Data_Cubes"
+    required:
+      - "Chaudhuri & Dayal 1997, An Overview of Data Warehousing and OLAP Technology (SIGMOD Record 26(1))"
+      - "Gray et al. 1997, Data Cube (Data Mining and Knowledge Discovery 1(1))"
+      - "Harinarayan, Rajaraman & Ullman 1996, Implementing Data Cubes Efficiently (SIGMOD)"
+    optional:
+      - "Zhao, Deshpande & Naughton 1997, An Array-Based Algorithm for Simultaneous Multidimensional Aggregates (SIGMOD)"
+      - "Beyer & Ramakrishnan 1999, Bottom-Up Computation of Sparse and Iceberg CUBEs (SIGMOD)"
+      - "Kimball & Ross 2013, The Data Warehouse Toolkit, ch. 1–3"
+  - num: 8
+    title: "Big Data & the Data Explosion"
+    purpose: "What makes data “big”, why it breaks the tools of earlier weeks, and how modern systems collect, store and analyse it at scale."
+    lessons:
+      - ["8-1", "What Is Big Data?"]
+      - ["8-2", "The V’s and the Challenges"]
+      - ["8-3", "Big Data Architecture"]
+    practice: "Millions of taxi trips on a laptop: DuckDB vs PostgreSQL"
+    services: "Python (DuckDB) + PostgreSQL"
+    lab: "week08"
+    deck: "CE502_W08_Big_Data_Data_Explosion"
+    required:
+      - "Dean & Ghemawat 2004, MapReduce (OSDI)"
+      - "Zaharia et al. 2012, Resilient Distributed Datasets (NSDI)"
+      - "Armbrust et al. 2021, Lakehouse (CIDR)"
+    optional:
+      - "Ghemawat, Gobioff & Leung 2003, The Google File System (SOSP)"
+      - "Kreps, Narkhede & Rao 2011, Kafka (NetDB)"
+      - "Laney 2001, 3D Data Management (META Group)"
+  - num: 9
+    title: "The Relational Problem & NoSQL"
+    purpose: "Why relational systems struggle at web scale, how they are stretched, and what document and wide-column databases do differently."
+    lessons:
+      - ["9-1", "Scaling Relational Systems"]
+      - ["9-2", "NoSQL Data Models"]
+      - ["9-3", "MongoDB and Cassandra"]
+    practice: "MongoDB and Cassandra, side by side"
+    services: "MongoDB + Cassandra (nosql profile)"
+    lab: "week09"
+    deck: "CE502_W09_Relational_Problem_NoSQL"
+    required:
+      - "DeCandia et al. 2007, Dynamo (SOSP)"
+      - "Chang et al. 2006, Bigtable (OSDI)"
+      - "Brewer 2012, CAP Twelve Years Later (IEEE Computer 45(2))"
+    optional:
+      - "Lakshman & Malik 2010, Cassandra (ACM SIGOPS OSR 44(2))"
+      - "Corbett et al. 2012, Spanner (OSDI)"
+      - "Cattell 2010, Scalable SQL and NoSQL Data Stores (SIGMOD Record 39(4))"
+  - num: 10
+    title: "Vector Database Foundations"
+    purpose: "How databases learn to search by meaning: embeddings, similarity measures, and a first vector database."
+    lessons:
+      - ["10-1", "Embeddings"]
+      - ["10-2", "Similarity Search"]
+      - ["10-3", "Vector Databases & Chroma"]
+    practice: "Semantic search over the course catalogue"
+    services: "Python + Chroma"
+    lab: "week10"
+    deck: "CE502_W10_Vector_Database_Foundations"
+    required:
+      - "Mikolov et al. 2013, Efficient Estimation of Word Representations in Vector Space (arXiv:1301.3781)"
+      - "Reimers & Gurevych 2019, Sentence-BERT (EMNLP-IJCNLP)"
+      - "Pan, Wang & Li 2024, Survey of Vector Database Management Systems (VLDB Journal 33)"
+    optional:
+      - "Wang et al. 2021, Milvus (SIGMOD)"
+      - "Pennington, Socher & Manning 2014, GloVe (EMNLP)"
+      - "Radford et al. 2021, CLIP (ICML)"
+  - num: 11
+    title: "Vector Search in NoSQL & PostgreSQL"
+    purpose: "How databases find the nearest vectors among millions in milliseconds, and how PostgreSQL, MongoDB and Cassandra do it."
+    lessons:
+      - ["11-1", "Approximate Nearest Neighbour Indexes"]
+      - ["11-2", "Vector Search in PostgreSQL with pgvector"]
+      - ["11-3", "Vector Search in MongoDB and Cassandra"]
+    practice: "From brute force to HNSW with pgvector"
+    services: "PostgreSQL + pgvector (+ MongoDB, Cassandra)"
+    lab: "week11"
+    deck: "CE502_W11_Vector_Search_NoSQL_PostgreSQL"
+    required:
+      - "Malkov & Yashunin 2020, HNSW (IEEE TPAMI 42(4))"
+      - "Jégou, Douze & Schmid 2011, Product Quantization for Nearest Neighbor Search (IEEE TPAMI 33(1))"
+    optional:
+      - "Johnson, Douze & Jégou 2021, Billion-Scale Similarity Search with GPUs (IEEE Trans. Big Data 7(3))"
+      - "Subramanya et al. 2019, DiskANN (NeurIPS)"
+      - "Aumüller, Bernhardsson & Faithfull 2020, ANN-Benchmarks (Information Systems 87)"
+  - num: 12
+    title: "RAG, Recommenders & Wrap-up"
+    purpose: "Vector databases at work in the two most common AI applications, and a look back at the whole course."
+    lessons:
+      - ["12-1", "Retrieval-Augmented Generation"]
+      - ["12-2", "Recommender Systems"]
+      - ["12-3", "Course Wrap-up and Careers Revisited"]
+    practice: "RAG and recommenders: the starting point of your final project"
+    services: "PostgreSQL + pgvector + Python"
+    lab: "week12"
+    deck: "CE502_W12_RAG_Recommenders_Wrap_up"
+    required:
+      - "Lewis et al. 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (NeurIPS)"
+      - "Karpukhin et al. 2020, Dense Passage Retrieval (EMNLP)"
+      - "Koren, Bell & Volinsky 2009, Matrix Factorization Techniques for Recommender Systems (IEEE Computer 42(8))"
+    optional:
+      - "Gao et al. 2023, Retrieval-Augmented Generation for Large Language Models: A Survey (arXiv:2312.10997)"
+      - "Es et al. 2024, RAGAs (EACL demos)"
+      - "Covington, Adams & Sargin 2016, Deep Neural Networks for YouTube Recommendations (RecSys)"

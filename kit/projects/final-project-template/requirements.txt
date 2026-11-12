@@ -1,0 +1,13 @@
+# Final project starter · Python 3.10+
+# Same versions as the course kit (setup/requirements-ai.txt). Pin every package your project uses.
+numpy==2.5.3
+chromadb==1.5.9
+# Real semantic embeddings (large download: PyTorch + ~90 MB model on first use).
+# Without it the template runs with the offline hashing fallback.
+sentence-transformers==3.3.1
+# pgvector variant (see README):
+# psycopg[binary]==3.3.6
+# pgvector==0.5.1
+# Optional LLM client [test before class] - install the one you use:
+# anthropic
+# openai
