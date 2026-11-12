@@ -598,7 +598,8 @@ def write_kit_zip(dest):
         raise SystemExit("kit/ is missing: run tools/sync_kit.py first")
     dest.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(dest, "w", zipfile.ZIP_STORED) as z:
-        for p in sorted(kit.rglob("*")):
+        # Sort on the posix string: Path ordering ignores case on Windows but not on Linux.
+        for p in sorted(kit.rglob("*"), key=lambda q: q.relative_to(kit).as_posix()):
             if p.is_dir():
                 continue
             data = p.read_bytes()
