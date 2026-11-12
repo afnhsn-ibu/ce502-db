@@ -1,0 +1,142 @@
+[
+ {
+  "label": "Navathe et al. 1984",
+  "kind": "Required",
+  "course_key": "Navathe et al. 1984, Vertical Partitioning Algorithms for Database Design (ACM TODS 9(4))",
+  "short_title": "Cluster Attribute Affinity, Then Split It",
+  "citation": "Navathe, S., Ceri, S., Wiederhold, G., & Dou, J. (1984). Vertical partitioning algorithms for database design. ACM Transactions on Database Systems, 9(4), 680–710. https://doi.org/10.1145/1994.2209",
+  "problem": "A relation can be split into groups of columns so that each transaction reads less data. But the number of possible groupings grows too fast to try them all. The authors look for good vertical partitions with heuristics.",
+  "key_ideas": [
+   "An attribute affinity matrix counts how often pairs of attributes are used together",
+   "The bond energy algorithm reorders the matrix so that related attributes sit side by side",
+   "A binary split cuts the ordered list where an objective like the lessons' z is largest"
+  ],
+  "key_term": {
+   "term": "Attribute affinity",
+   "definition": "For two attributes, the total access frequency of the transactions that use both of them"
+  },
+  "slide2_title": "Repeated Splits Fit Disks, Memory Levels and Sites",
+  "findings": [
+   "Applying the binary split again to each part gives more than two fragments",
+   "Shifting the order lets the split find a cluster that sits in the middle of the matrix",
+   "The method covers one storage device type, several memory levels, and a distributed database"
+  ],
+  "course_link": "Lesson 6-2's BEA and Lesson 6-3's split and middle-cluster slides come from this paper. In Practice 6 Part A you code affinity, BEA and z; Part B splits STUDENT twice.",
+  "limitation": "The split objective is a heuristic, not a real cost, and BEA is greedy, so the best partition is not guaranteed. It assumes a fixed, known workload.",
+  "note_question": "Navathe et al. treat a vertical split as a trade-off. What does their split objective reward, what does it penalise, and why?",
+  "notes_slide1": "Navathe, Ceri, Wiederhold and Dou worked at Stanford when they wrote this paper for ACM Transactions on Database Systems. It brought the bond energy algorithm, published by McCormick, Schweitzer and White in 1972, into database design. The starting point is the same as in Lesson 6-1. A relation is used by many transactions, and each transaction reads only some of its attributes. If attributes that are used together are stored together, transactions read less data. But the number of ways to group m attributes is the Bell number of m, which grows faster than exponentially, so trying every grouping is impossible for realistic tables. The authors therefore summarise the workload in an attribute affinity matrix. For each pair of attributes, the affinity is the total frequency of the transactions that use both. The diagonal entry for an attribute is the total frequency of the transactions that use it. The bond energy algorithm then permutes the rows and columns of this matrix so that large values lie near each other. Attributes with high affinity become neighbours.",
+  "notes_slide2": "With the attributes in clustered order, the next step is to find a split point. For a cut into an upper and a lower block, the transactions fall into three groups: those that use only the upper attributes, those that use only the lower ones, and those that use both. A good cut serves many transactions with one block alone and few with both. The objective z of Lesson 6-3, the product of the first two counts minus the square of the third, is the textbook form of this idea, and the binary partitioning step tries every cut. A cluster in the middle of the order cannot be separated by one cut, so the order is shifted, moving attributes from one end to the other, and the cuts are tried again. To obtain more than two fragments, the binary split is applied again to each fragment. The authors then extend the method from a single type of storage to several memory levels and to a distributed database, where fragments are also assigned to sites. As you read, compare their notation and objective with the slides of Lessons 6-2 and 6-3."
+ },
+ {
+  "label": "Abadi et al. 2008",
+  "kind": "Required",
+  "course_key": "Abadi, Madden & Hachem 2008, Column-Stores vs. Row-Stores (SIGMOD)",
+  "short_title": "Splitting a Row Store by Column Is Not Enough",
+  "citation": "Abadi, D. J., Madden, S. R., & Hachem, N. (2008). Column-stores vs. row-stores: How different are they really? In Proceedings of the 2008 ACM SIGMOD International Conference on Management of Data (SIGMOD '08) (pp. 967–980). ACM. https://doi.org/10.1145/1376616.1376712",
+  "problem": "Column stores beat row stores on warehouse queries by large factors. Many assumed a row store could match them by partitioning its tables vertically or by indexing every column. The authors test this claim.",
+  "key_ideas": [
+   "A DBA built row-store designs in System X: vertical partitions, index-only plans and views",
+   "Each vertical partition is a two-column table: a value and an integer position to rejoin rows",
+   "Then they removed C-Store's optimisations one at a time to measure what each one adds"
+  ],
+  "key_term": {
+   "term": "Late materialisation",
+   "definition": "Keeping columns apart during a query and building rows only when needed, late in the plan"
+  },
+  "slide2_title": "Column Stores Win in the Executor, Not Only on Disk",
+  "findings": [
+   "Vertical partitions lost to the normal row layout once queries read over about 1/4 of the columns",
+   "C-Store averaged about 4 s per query; the column emulations in System X took 80 to 220 s",
+   "Late materialisation gave about 3×, compression about 2×, the new invisible join about 50%"
+  ],
+  "course_link": "Lesson 6-1 says every vertical fragment keeps the key; this paper shows what that costs. In Practice 6 Part C, EXPLAIN shows the hash join on sid that rebuilds rows.",
+  "limitation": "One benchmark (SSBM, scale 10) on one machine, comparing a research prototype with one unnamed commercial system. Both have changed a lot since 2008.",
+  "note_question": "Abadi et al. say emulating a column store in a row store is not impossible. Which changes would a row store need first, and why?",
+  "notes_slide1": "Column stores such as C-Store and MonetDB had reported large gains over row stores on analytical queries. Critics asked whether these gains came only from the storage layout, which a row store could copy. Abadi, Madden and Hachem test this on the Star Schema Benchmark, a simplified TPC-H. It has one fact table, LINEORDER, with 17 columns and 60 million rows at scale factor 10, and 13 queries in four flights. Hachem, a professional DBA for a commercial product called System X, tuned five designs: a traditional row layout, the same with bitmap plans, full vertical partitioning, index-only plans with a B+tree on every column, and materialised views with exactly the columns each flight needs. In the vertical partitioning design, each column becomes its own table with an integer position column, because the composite key of LINEORDER is too large to repeat. Queries must join these tables on the position, and System X chose hash joins. Every row in every table also carries a tuple header. Both costs grow as a query reads more columns.",
+  "notes_slide2": "Section 6.2 shows that none of the emulations worked well. Materialised views were best, and on average the traditional design was about three times faster than the best column-oriented emulation. Vertical partitioning was competitive only when a query read few columns. Index-only plans were worst, because System X joined whole 60-million-row columns before applying filters. C-Store, by contrast, averaged about 4 seconds per query, faster even than System X with its views at 10.2 seconds. Section 6.3 explains why. A column store does not store row identifiers: the i-th value of each column belongs to the i-th row, and headers are kept apart. The authors then removed optimisations from C-Store one at a time. Late materialisation was worth almost a factor of three, compression almost two on average and much more on sorted data, and block iteration 5% to 50%. Their new invisible join added about 50%. The conclusion is careful: a row store could imitate a column store, but only with changes to both its storage and its query executor."
+ },
+ {
+  "label": "McCormick et al. 1972",
+  "kind": "Optional",
+  "course_key": "McCormick, Schweitzer & White 1972, Problem Decomposition and Data Reorganization by a Clustering Technique (Operations Research 20(5))",
+  "short_title": "Reorder a Matrix to Reveal Its Clusters",
+  "citation": "McCormick, W. T., Schweitzer, P. J., & White, T. W. (1972). Problem decomposition and data reorganization by a clustering technique. Operations Research, 20(5), 993–1009. https://doi.org/10.1287/opre.20.5.993",
+  "problem": "Large data arrays, such as objects against their attributes, hide their structure behind an arbitrary order of rows and columns. The authors ask how to permute rows and columns so that groups of related items become visible.",
+  "key_ideas": [
+   "A measure of effectiveness adds each cell's value times the values of its four neighbours",
+   "Rows and columns are placed one at a time, each where it raises the measure most",
+   "Clustered blocks show how a large problem splits into nearly separate subproblems"
+  ],
+  "key_term": {
+   "term": "Bond energy",
+   "definition": "The sum of products of neighbouring values; it is high when large values sit next to large values"
+  },
+  "slide2_title": "A General Clustering Tool, Later Used for Databases",
+  "findings": [
+   "Needs no distance measure or number of clusters, only the non-negative values of the array",
+   "Greedy placement is fast, but the result can depend on which row or column is placed first",
+   "Shown on examples of problem decomposition and of reorganising data arrays"
+  ],
+  "course_link": "Lesson 6-2's global affinity measure AM and the cont formula come from this measure. In Practice 6 Part A you implement bond, cont and BEA in bea_starter.py.",
+  "limitation": "Greedy and sensitive to its starting point. It finds an order of rows and columns, not the boundaries between the clusters.",
+  "note_question": "BEA was made for any data matrix, not for databases. Where else could you use it, for example in a shop or a university?",
+  "notes_slide1": "McCormick, Schweitzer and White published this paper in Operations Research in 1972. They were not thinking of databases. Their question was general: given a data array, such as a table of objects and their attributes, or of objects against other objects, how can the rows and columns be reordered so that groups of related items appear as blocks? Such blocks show how a large problem can be decomposed into smaller, nearly independent problems. They also show how data can be reorganised so that items used together are kept together. The authors call their method the bond energy algorithm. It defines a measure of effectiveness for an ordering of the array. For every cell, multiply its value by the values of its neighbours to the left, right, above and below, and add up these products. Orders in which large values are next to large values score high. The measure needs no distance function and no fixed number of clusters, only the non-negative values in the array itself.",
+  "notes_slide2": "Finding the order with the highest measure exactly is a hard combinatorial problem, so the paper uses a greedy procedure. It places one column, then adds the remaining columns one at a time, each in the position that increases the measure most, and then does the same for the rows. Because the measure splits into a part for rows and a part for columns, the two orders can be found separately. When the matrix is symmetric, as an attribute affinity matrix is, one order serves for both. This is the procedure of Lesson 6-2, where the contribution of placing an attribute between two others is computed from bonds. The result depends on where the procedure starts, so it gives a good order, not a guaranteed best one. A technical note in the same journal in 1974 later showed that the ordering problem can be solved as travelling-salesman problems. The paper itself only decides the order. Finding where one block ends and the next begins is left to the analyst, as the split step does in Lesson 6-3."
+ },
+ {
+  "label": "Agrawal et al. 2004",
+  "kind": "Optional",
+  "course_key": "Agrawal, Narasayya & Yang 2004, Integrating Vertical and Horizontal Partitioning (SIGMOD)",
+  "short_title": "Choose Partitions and Indexes Together, Not in Turn",
+  "citation": "Agrawal, S., Narasayya, V., & Yang, B. (2004). Integrating vertical and horizontal partitioning into automated physical database design. In Proceedings of the 2004 ACM SIGMOD International Conference on Management of Data (SIGMOD '04) (pp. 359–370). ACM. https://doi.org/10.1145/1007568.1007609",
+  "problem": "Tuning tools chose indexes and materialised views from a workload. Partitioning adds many more options, which interact with indexes and must stay easy to manage. How can a tool choose them all together and still scale?",
+  "key_ideas": [
+   "Column-groups prune the search: keep only column sets used by enough of the workload's cost",
+   "VP-confidence, from 0 to 1, measures how often a column-group's columns are used together",
+   "Merging creates candidates for several queries; alignment partitions indexes like tables"
+  ],
+  "key_term": {
+   "term": "Aligned index",
+   "definition": "An index partitioned horizontally in the same way as its table, which makes backup and restore easier"
+  },
+  "slide2_title": "Choosing Design Features in Stages Locks In Poor Designs",
+  "findings": [
+   "A TPC-H query ran about 30% faster when its index and partitioning were chosen together",
+   "Vertical partitioning first, then indexes, was worse than integrated design at every storage size",
+   "A column-group threshold of 0.02 cost only 2% quality on TPC-H, with a shorter running time"
+  ],
+  "course_link": "Lesson 6-1 starts from the queries and frequencies, as this tool does. In Practice 6 Part C the fragments are plain tables, which is also how the tool simulates them.",
+  "limitation": "Single-node only: it ignores network costs and allocation to sites. Vertical partitions are simulated as separate tables, with queries rewritten.",
+  "note_question": "Why can a vertical partition chosen before the indexes rule out good indexes? Think of an index that needs columns from two sub-tables.",
+  "notes_slide1": "Agrawal and Narasayya worked on database tuning tools at Microsoft Research; Yang was visiting from Stanford. Earlier tools chose indexes and materialised views from a workload of SQL statements, each with a weight. This paper adds horizontal partitioning, by range or hash, and vertical partitioning, in which a table is split into sub-tables with disjoint columns that all keep the key. Example 1 shows why the choices must be made together. For a TPC-H query, choosing the best index first and partitioning it afterwards gave an index that starts with the ship date and is hash partitioned on two flag columns. Choosing both together gave the same columns in a different order, range partitioned on the ship date, and the query ran about 30% faster. Once the first step fixes the column order of the index, the second step cannot undo it. The paper also treats manageability. Administrators want indexes aligned with their tables, partitioned in the same way, so that backup and restore can work on whole partitions.",
+  "notes_slide2": "Partitioning makes the search space much larger, so the authors prune it. A column-group is a set of columns that queries reference together. Its CG-Cost is the fraction of the workload's cost that comes from queries using it, and only groups above a threshold f are kept. Because every subset of a frequent group is also frequent, the groups can be found with a frequent-itemset algorithm from data mining. VP-confidence then measures how often the columns of a group are used together, weighted by column width; a high value means the columns should not be split. Candidate structures are merged to find designs that are good for several queries. Alignment is handled lazily, by generating aligned indexes only when needed, which was about 90% faster than an eager method on TPC-H. The experiments ran on a modified Microsoft SQL Server with 1 GB of TPC-H data. Choosing everything together beat indexes alone at low storage bounds, and beat vertical partitioning followed by indexing at every bound. The study covers one node only."
+ },
+ {
+  "label": "Stonebraker et al. 2005",
+  "kind": "Optional",
+  "course_key": "Stonebraker et al. 2005, C-Store (VLDB)",
+  "short_title": "A Read-Optimised Store of Sorted, Compressed Columns",
+  "citation": "Stonebraker, M., Abadi, D. J., Batkin, A., Chen, X., Cherniack, M., Ferreira, M., Lau, E., Lin, A., Madden, S., O'Neil, E., O'Neil, P., Rasin, A., Tran, N., & Zdonik, S. (2005). C-Store: A column-oriented DBMS. In Proceedings of the 31st International Conference on Very Large Data Bases (VLDB 2005) (pp. 553–564).",
+  "problem": "Row stores are write-optimised: one disk write stores a whole record. Warehouses and other read-mostly systems mainly run ad-hoc queries over large data. The authors design a DBMS optimised for reading instead.",
+  "key_ideas": [
+   "Data is stored as projections: columns sorted on the same key; projections may overlap",
+   "Columns are coded and densely packed, and operators work directly on compressed data",
+   "A small writeable store takes inserts; a tuple mover merges them into the read store"
+  ],
+  "key_term": {
+   "term": "Projection",
+   "definition": "In C-Store, a stored group of columns from one table, sorted on a key; a column may be in several"
+  },
+  "slide2_title": "Redundant Sorted Projections Can Still Use Less Space",
+  "findings": [
+   "On seven TPC-H-style queries, C-Store used 1.987 GB of disk; the row store needed 4.480 GB",
+   "With limited space, it was on average 164× faster than a row store and 21× faster than a column store",
+   "Overlapping projections on different nodes give K-safety: data survives K node failures"
+  ],
+  "course_link": "Lesson 6-1 splits a table into column groups that keep the key; C-Store takes this to single columns. Rows are rebuilt from fragments, like the join on sid in Practice 6 Part C.",
+  "limitation": "A design paper with preliminary results: read-only queries on one machine. The writeable store and tuple mover were not yet tested.",
+  "note_question": "C-Store stores the same column several times in different sort orders. Why can this redundancy pay off in a read-mostly system?",
+  "notes_slide1": "C-Store was a joint research project of MIT, Brown, Brandeis and the University of Massachusetts Boston, led by Michael Stonebraker. The paper starts from the difference between write-optimised and read-optimised systems. A row store writes a whole record with one disk write, which suits OLTP. A data warehouse is loaded in bulk and then queried for long periods, so it should be optimised for reading. Storing each column separately means that a query reads only the columns it needs. C-Store also uses spare CPU cycles to save disk bandwidth: values are coded into compact forms and densely packed, and operators work on the compressed data where possible. The physical design is not a set of tables and indexes but a set of projections. A projection takes some columns of one table, possibly with columns from related tables reached by foreign keys, and stores them sorted on a key. The same column can appear in several projections with different sort orders, so each query can use the most suitable one. Each projection is horizontally partitioned into segments by ranges of its sort key.",
+  "notes_slide2": "Updates are hard to combine with sorted, compressed columns. C-Store therefore has two parts: a small writeable store for fast inserts and updates, and a large read-optimised store. A background tuple mover merges batches of records from the first into the second, writing a new segment instead of updating in place. Read-only queries run with snapshot isolation at a time slightly in the past, so they need no locks. Because projections overlap, they can be placed on different nodes so that all data survives the failure of K nodes; the authors call this K-safety. Section 9 gives early results on a single 3.0 GHz machine with a simplified TPC-H at scale 10, 60 million line items, and seven queries. With a storage budget of 2.7 GB, C-Store used 1.987 GB, against 4.480 GB for the row store and 2.650 GB for a commercial column store. It was on average 164 times faster than the row store and 21 times faster than the column store. With materialised views and more space, the gaps were 6.4 and 16.5 times. The authors call these results very preliminary."
+ }
+]

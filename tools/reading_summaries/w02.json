@@ -1,0 +1,170 @@
+[
+ {
+  "label": "Gray et al. 1996",
+  "kind": "Required",
+  "course_key": "Gray et al. 1996, The Dangers of Replication and a Solution (SIGMOD)",
+  "short_title": "Update-Anywhere Replication Does Not Scale",
+  "citation": "Gray, J., Helland, P., O'Neil, P., & Shasha, D. (1996). The dangers of replication and a solution. In Proceedings of the 1996 ACM SIGMOD International Conference on Management of Data (SIGMOD '96) (pp. 173–182). ACM. https://doi.org/10.1145/233269.233330",
+  "problem": "Replicating data at many nodes looks like an easy way to gain availability and speed. Gray and colleagues ask what happens to waits, deadlocks and reconciliations when the number of nodes and the traffic grow.",
+  "key_ideas": [
+   "When: eager replication updates all copies in one transaction; lazy replication does it after commit",
+   "Who: group ownership lets any copy be updated; master ownership allows updates only at the owner",
+   "A simple analytic model counts waits, deadlocks and reconciliations as the number of nodes grows"
+  ],
+  "key_term": {
+   "term": "Reconciliation",
+   "definition": "Repairing conflicting updates already committed at different copies, done by a program or a person"
+  },
+  "slide2_title": "Ten Times More Nodes, a Thousand Times More Deadlocks",
+  "findings": [
+   "Eager replication: deadlocks grow with the cube of the nodes and the fifth power of transaction size",
+   "Lazy group replication turns waits into reconciliations, which grow just as fast",
+   "Proposed fix, two-tier replication: mobile nodes run tentative transactions, re-run on base nodes"
+  ],
+  "course_link": "Lesson 2-2's 'Synchronous vs Asynchronous Replication' slide is eager versus lazy. PostgreSQL's single primary is master ownership; you see it in Practice 2's optional replication demo.",
+  "limitation": "The model is simple: uniform access, no hotspots, message delays ignored. It predicts trends, not real rates, and its mobile setting is from 1996.",
+  "note_question": "PostgreSQL streaming replication has one primary. Which of Gray's four schemes is it, and why does it never need reconciliation?",
+  "notes_slide1": "Jim Gray and Pat Helland of Microsoft, with Patrick O'Neil and Dennis Shasha, wrote this paper for SIGMOD 1996. Section 1 sets the problem with a joint checking account of 1,000 dollars, copied in your checkbook, your spouse's checkbook and the bank's ledger. Eager replication keeps all three equal and stops you from overdrawing. Lazy replication lets each of you spend the full 1,000 dollars, and someone must reconcile the extra spending later. Section 2 defines two dimensions. Propagation is eager, inside the original transaction, or lazy, as separate transactions after commit. Ownership is group, where any copy may be updated, or master, where only the object's owner may update it. The model assumes that every node holds a copy of every object, that access is uniform with no hotspots, and that message delays can be ignored. Its key observation is simple: with N nodes, N times as many transactions start, and each update must reach every other node, so the update work at each node grows with the square of N.",
+  "notes_slide2": "Section 3 analyses eager replication. Each transaction now updates every copy, so it lasts N times longer and holds its locks longer, while N times more transactions run. The paper derives that the deadlock rate grows with the third power of the number of nodes and the fifth power of transaction size: going from one node to ten raises deadlocks a thousand times. Eager replication also cannot serve mobile nodes that are disconnected. Section 4 shows that lazy group replication does not escape: the conflicts that would cause waits become reconciliations, which grow just as fast, and much faster when nodes stay disconnected for hours. Section 5 finds lazy master replication slightly better, but still unstable as nodes are added. When reconciliation fails, copies drift apart, a state the authors call system delusion. Their proposal in section 7, two-tier replication, keeps master copies on always-connected base nodes. Mobile nodes run tentative transactions, which are re-run on the base nodes and accepted only if they pass an acceptance test."
+ },
+ {
+  "label": "Verbitski et al. 2017",
+  "kind": "Required",
+  "course_key": "Verbitski et al. 2017, Amazon Aurora (SIGMOD)",
+  "short_title": "The Log Is the Database",
+  "citation": "Verbitski, A., Gupta, A., Saha, D., Brahmadesam, M., et al. (2017). Amazon Aurora: Design considerations for high throughput cloud-native relational databases. In Proceedings of SIGMOD '17 (pp. 1041–1052). ACM. https://doi.org/10.1145/3035918.3056101",
+  "problem": "In the cloud, storage is spread over many nodes, so the network becomes the bottleneck. A mirrored MySQL writes each change many times: redo log, pages, double-write buffer, binlog. Amazon redesigns the engine around this.",
+  "key_ideas": [
+   "Six copies across three availability zones; a write needs 4 of 6 votes, a read needs 3 of 6",
+   "The volume is split into 10 GB segments, so a failed copy can be rebuilt in about 10 seconds",
+   "The engine sends only redo log records; storage nodes build the pages from them in the background"
+  ],
+  "key_term": {
+   "term": "Quorum",
+   "definition": "The number of copies that must confirm a read or a write; read and write quorums must overlap"
+  },
+  "slide2_title": "Recovery and Backup Become Background Work",
+  "findings": [
+   "In a 30-minute SysBench test, Aurora ran 35 times more transactions than mirrored MySQL",
+   "The database node made 7.7 times fewer I/Os per transaction, despite writing six copies",
+   "No replay at start-up: storage applies redo continuously and stages log and pages to Amazon S3"
+  ],
+  "course_link": "Connects Week 1's WAL to Lesson 2-3's 'Crash Recovery and Media Recovery' and RPO and RTO slides. In Practice 2 Part B you replay archived WAL yourself during point-in-time recovery.",
+  "limitation": "An industry paper on a closed service, with results from Amazon's own tests. Its six copies follow one log, so they also copy a mistaken DROP TABLE.",
+  "note_question": "Which Week 1 idea lets Aurora send only log records instead of pages? How does this change its RPO and RTO?",
+  "notes_slide1": "Aurora is Amazon's relational database service for OLTP, which started from the MySQL code base; the paper reports on 18 months in production. Section 1 argues that in the cloud, where reads and writes are spread over many disks and nodes, the bottleneck moves to the network. Aurora therefore keeps the query processor, transactions, locking, buffer cache and undo management in the database instance. It moves redo logging, durable storage, crash recovery, and backup and restore to a separate storage service shared by many customers. Section 2 explains durability. In a large fleet, some disks and nodes are always failing, and a whole availability zone can fail at once. Three copies with two-of-three quorums cannot survive a zone failure plus one more failure. Aurora keeps six copies, two in each of three zones, with a write quorum of four and a read quorum of three. It can lose a zone and one more node and still read, and lose any two nodes and still write. Data is split into 10 GB segments, so a failed copy is rebuilt in about 10 seconds on a 10 Gbps link.",
+  "notes_slide2": "Section 3 explains the slogan the log is the database. In MySQL mirrored across two zones, one user change causes many writes: the redo log, the binary log archived to Amazon S3 for point-in-time restore, the data page, a double-write copy against torn pages, and metadata files, many of them in sequence. In Aurora, only redo log records cross the network. The database tier never writes a page, not for checkpoints and not when it evicts a page from its cache. Storage nodes apply the log to build pages in the background; these pages are only a cache of log applications. In a 30-minute SysBench write-only test on 100 GB of data, Aurora handled 35 times more transactions than mirrored MySQL, with 7.7 times fewer I/Os per transaction on the database node. Crash recovery changes too: storage applies redo all the time, so nothing must be replayed at start-up. Each storage node stores log records, fills gaps by gossip with its peers, builds pages, stages log and pages to S3, and checks page checksums."
+ },
+ {
+  "label": "Ongaro & Ousterhout 2014",
+  "kind": "Required",
+  "course_key": "Ongaro & Ousterhout 2014, Raft (USENIX ATC)",
+  "short_title": "Consensus Designed to Be Understood",
+  "citation": "Ongaro, D., & Ousterhout, J. (2014). In search of an understandable consensus algorithm. In Proceedings of the 2014 USENIX Annual Technical Conference (USENIX ATC '14) (pp. 305–319). USENIX Association.",
+  "problem": "Paxos dominated consensus for a decade, but students and system builders found it very hard to understand and to turn into working systems. Ongaro and Ousterhout design a consensus algorithm whose first goal is understandability.",
+  "key_ideas": [
+   "A replicated state machine: every server applies the same log of commands in the same order",
+   "Each server is a leader, a follower or a candidate; time is divided into numbered terms",
+   "Raft splits consensus into leader election, log replication and safety, each explained alone"
+  ],
+  "key_term": {
+   "term": "Term",
+   "definition": "A numbered period of time that begins with an election and has at most one leader"
+  },
+  "slide2_title": "Majority Votes Give At Most One Leader per Term",
+  "findings": [
+   "Each server votes once per term and a candidate needs a majority, so no term can have two winners",
+   "Random election timeouts, for example 150–300 ms, make split votes rare and end them quickly",
+   "An entry is committed once a majority stores it; a leader that sees a higher term steps down"
+  ],
+  "course_link": "Lesson 2-2's 'Failover: Promoting the Standby' and 'Split Brain' slides rely on it. In Practice 2's optional replication demo you promote the replica by hand; Patroni would decide via etcd.",
+  "limitation": "Raft assumes servers fail by stopping, not by lying. Without a majority the cluster accepts no writes, so two servers cannot survive one failure.",
+  "note_question": "Why must any two majorities of the same cluster overlap, and how does this prevent split brain during failover?",
+  "notes_slide1": "Diego Ongaro and John Ousterhout of Stanford University found that Paxos, the standard consensus algorithm, was very hard to learn and hard to turn into real systems. Their main goal for Raft was understandability. A user study with 43 students at two universities found that 33 of them answered questions on Raft better than on Paxos. Section 2 explains the problem that consensus solves. In a replicated state machine, several servers each keep a log of commands. If all logs hold the same commands in the same order, and the state machines are deterministic, every server computes the same state. The consensus algorithm keeps the logs consistent. A practical algorithm must never return a wrong result under network delays, partitions or lost messages, as long as servers fail by stopping. It must keep working while a majority of servers are up, so a cluster of five can lose two. It must not depend on clocks for safety. Chubby and ZooKeeper are examples of such services; etcd, which Patroni can use for PostgreSQL failover, is built on Raft.",
+  "notes_slide2": "Section 5.1 sets out the basics. Each server is a leader, a follower or a candidate. Time is divided into terms, numbered with consecutive integers, and each term starts with an election. Terms act as a logical clock: when a server sees a higher term, it adopts it, and a leader or candidate with an old term at once becomes a follower. Section 5.2 describes leader election. The leader sends regular heartbeats. If a follower hears nothing during its election timeout, it increases its term, votes for itself and asks the others for votes. Each server votes for at most one candidate per term, first come, first served, and a candidate needs votes from a majority of the full cluster. Two majorities always share a server, so at most one candidate can win a term. Timeouts are chosen at random, for example between 150 and 300 ms, so split votes are rare. Section 5.3 covers log replication. The leader appends client commands to its log and sends them to the followers. An entry is committed once a majority stores it."
+ },
+ {
+  "label": "Patterson et al. 1988",
+  "kind": "Optional",
+  "course_key": "Patterson, Gibson & Katz 1988, RAID (SIGMOD)",
+  "short_title": "Many Cheap Disks Need Redundancy",
+  "citation": "Patterson, D. A., Gibson, G., & Katz, R. H. (1988). A case for redundant arrays of inexpensive disks (RAID). In Proceedings of the 1988 ACM SIGMOD International Conference on Management of Data (SIGMOD '88) (pp. 109–116). https://doi.org/10.1145/50202.50214",
+  "problem": "In the 1980s, processors and memory grew fast, but large expensive disks improved slowly. Arrays of small PC disks promise more I/O, yet with 100 disks one fails about every two weeks. The authors look for a design.",
+  "key_ideas": [
+   "Arrays of inexpensive disks can beat one large disk on I/O rate, cost per megabyte and power",
+   "Group the disks with extra check disks, so the data of one failed disk can be rebuilt",
+   "Five RAID levels, from mirrored disks (level 1) to parity spread across all disks (level 5)"
+  ],
+  "key_term": {
+   "term": "Mean time to failure",
+   "definition": "Average operating time before a device fails; an array's MTTF falls as more disks are added"
+  },
+  "slide2_title": "Redundancy Protects Against a Disk, Not a Mistake",
+  "findings": [
+   "Without redundancy, 100 small disks give an array MTTF of 300 hours, under two weeks",
+   "Level 5 spreads data and parity over all disks, so several small writes can run in parallel",
+   "The reliability figures assume independent failures, which an earthquake or power surge breaks"
+  ],
+  "course_link": "Supports Lesson 2-1's 'Common Causes of Data Loss' and Lesson 2-2's 'Replication is not a backup'. The DELETE in Practice 2 Part A would reach every disk of a RAID array at once.",
+  "limitation": "A 1988 paper about magnetic disks and their prices. It leaves out cabling, controllers and software, and says nothing about human error.",
+  "note_question": "RAID 5 survives one failed disk. Which causes of data loss from Lesson 2-1 does it not cover, and what does cover them?",
+  "notes_slide1": "David Patterson, Garth Gibson and Randy Katz, of the University of California, Berkeley, start from an imbalance. Processor and memory performance grew very fast, but the seek time of single large expensive disks improved by only about 7% a year. By Amdahl's law, faster processors would then be wasted waiting for I/O. Small disks built for personal computers offered an alternative. Table I compares an IBM 3380 mainframe disk with a Conner CP 3100 PC disk: the small disk was within a factor of two in I/Os per second per actuator, and equal or better in price per megabyte, size and power. The authors estimate that 75 inexpensive disks could give 12 times the I/O bandwidth of the IBM 3380, with the same capacity. Then comes the bad news. If failures are independent, an array's mean time to failure is one disk's MTTF divided by the number of disks. With 30,000-hour disks, 100 of them fail every 300 hours, under two weeks, and 1,000 of them about once a day. Without redundancy, large arrays are too unreliable to use.",
+  "notes_slide2": "The answer is redundancy. Disks are split into groups, each with extra check disks. When a disk fails, its contents are rebuilt from the others during the mean time to repair; hot spare disks shorten this time. The paper then defines five levels. Level 1 mirrors every disk, which is simple but doubles the number of disks. Level 2 uses Hamming codes, as in memory chips, with several check disks per group. Level 3 notes that disk controllers already detect which disk has failed, so one parity disk per group is enough. Level 4 keeps each transfer unit on a single disk, so small reads can run in parallel, but every write still needs the one check disk. Level 5 spreads data and parity across all disks, so several small writes can proceed at once; the authors find it the most attractive. For each level they calculate reliability, cost and performance. Note the assumptions: failures are independent, which an earthquake or power surge would break, and only the disks are modelled, not the software or electronics."
+ },
+ {
+  "label": "Kemme & Alonso 2000",
+  "kind": "Optional",
+  "course_key": "Kemme & Alonso 2000, Postgres-R (VLDB)",
+  "short_title": "Eager Replication Can Work on a Cluster",
+  "citation": "Kemme, B., & Alonso, G. (2000). Don't be lazy, be consistent: Postgres-R, a new way to implement database replication. In Proceedings of the 26th International Conference on Very Large Data Bases (VLDB 2000) (pp. 134–143). Morgan Kaufmann.",
+  "problem": "After Gray et al., most designers believed that eager, update-everywhere replication was impractical. Lazy schemes give up consistency or depend on a primary copy. Kemme and Alonso want eager replication that performs well.",
+  "key_ideas": [
+   "Run each transaction locally on shadow copies, then send all its writes in one write-set message",
+   "Group communication delivers the write sets to all sites in the same total order",
+   "Each site takes all write locks of a write set in one atomic step, so these transactions never deadlock"
+  ],
+  "key_term": {
+   "term": "Total order multicast",
+   "definition": "A group communication service that delivers every message to all sites in the same order"
+  },
+  "slide2_title": "Built Into PostgreSQL and Tested on 15 Nodes",
+  "findings": [
+   "From one to five servers, distributed locking slowed sharply while Postgres-R stayed stable",
+   "Response times fell as nodes were added, and abort rates never exceeded 5% in the tests",
+   "With mostly read-only queries, 15 servers handled up to 225 transactions per second"
+  ],
+  "course_link": "A reply to Gray et al. for Lesson 2-2's 'Synchronous vs Asynchronous Replication'. The replication demo of Practice 2 shows today's PostgreSQL choice instead: one primary, streaming WAL.",
+  "limitation": "The tests used PostgreSQL's no-flush option, which forces nothing to disk and breaks durability. Only 15 nodes and small tables were tested.",
+  "note_question": "Postgres-R lets every site accept updates. Why do you think PostgreSQL today still replicates from a single primary?",
+  "notes_slide1": "Bettina Kemme and Gustavo Alonso, at ETH Zurich, challenge the belief, based on Gray and colleagues, that eager replication is impractical. They argue that classic eager protocols fail because they coordinate each operation separately, with distributed locking and two-phase commit. With n nodes and m operations per transaction, k transactions per second need k times m times n messages per second, which cannot scale. Lazy schemes, in turn, leave consistency to the user or rely on a primary copy, which is a bottleneck and a single point of failure. Their protocol has four phases. In the read phase, a transaction runs entirely at its local site and writes to shadow copies. In the send phase, its writes are bundled into one write set and multicast to all sites in total order. In the lock phase, each site requests all write locks for that write set in one atomic step, in delivery order. In the write phase, the updates are applied, and a separate commit or abort message follows. Local readers that conflict with an arriving writer are aborted, which prevents deadlocks.",
+  "notes_slide2": "Section 4 describes Postgres-R, an extension of PostgreSQL 6.4.2 that uses the Ensemble group communication system. Clients can connect to any server. A replication manager process sends and receives write sets, and a pool of remote backend processes applies the transactions of other sites. PostgreSQL's multi-version storage made shadow copies easy, and the authors added tuple-level locking based on primary keys. Remote sites apply the physical updates, found by primary key, which is much faster than running the SQL again. Section 5 reports four experiments on up to 15 workstations. Against a commercial product using distributed locking, Postgres-R stayed stable from one to five servers, while the other degraded. Under heavier load, response times improved as nodes were added, and abort rates stayed at or below 5%. Communication became a limit only above about 150 update transactions per second. With mostly read-only queries, 15 servers reached 225 transactions per second. Note that, to get realistic response times, the tests forced nothing to disk."
+ },
+ {
+  "label": "Bernstein et al. 1987",
+  "kind": "Optional",
+  "course_key": "Bernstein, Hadzilacos & Goodman 1987, Concurrency Control and Recovery in Database Systems, ch. 6–8",
+  "short_title": "The Formal Theory of Recovery and Replication",
+  "citation": "Bernstein, P. A., Hadzilacos, V., & Goodman, N. (1987). Concurrency control and recovery in database systems (Chs. 6–8). Addison-Wesley.",
+  "problem": "Recovery and replication algorithms were often explained one system at a time. Bernstein, Hadzilacos and Goodman define failures, logs and correctness precisely, so that any such algorithm can be checked.",
+  "key_ideas": [
+   "Chapter 6: the Undo and Redo Rules and four algorithm families, from undo/redo to no-undo/no-redo",
+   "Chapter 7: atomic commitment, two-phase commit, its blocking problem, and three-phase commit",
+   "Chapter 8: one-copy serializability, available copies and quorum consensus for replicated data"
+  ],
+  "key_term": {
+   "term": "One-copy serializability",
+   "definition": "A replicated execution that is equivalent to a serial execution on a database with one copy of each item"
+  },
+  "slide2_title": "Undo, Redo and Commit Rules Behind Every Log",
+  "findings": [
+   "The Undo Rule is write-ahead logging; the Redo Rule puts committed values in stable storage",
+   "In two-phase commit, a participant that voted Yes is blocked if the coordinator fails",
+   "Write-all replication stops when a site is down; quorums of votes let the system keep working"
+  ],
+  "course_link": "The theory behind Lesson 2-3's 'Crash Recovery and Media Recovery' and 'Standard Recovery: Restore, Then Roll Forward'. Practice 2 Part B's PITR is media recovery from an archive.",
+  "limitation": "A 1987 textbook: formal and dense, with proofs and exercises. Its examples predate group communication, Raft-style consensus and cloud storage.",
+  "note_question": "Why can two-phase commit block, and how does a majority-based protocol such as Raft avoid the same problem?",
+  "notes_slide1": "This textbook by Philip Bernstein, Vassos Hadzilacos and Nathan Goodman is a classic of transaction theory, now free from Microsoft Research. Chapter 6, on centralised recovery, first sets aside failures that recovery cannot fix, such as wrong transaction programs, and defines three failure types: transaction, system and media. It models a data manager with a cache manager and a recovery manager, and states two rules that every recovery manager must obey. The Undo Rule says that the last committed value of an item must be saved in stable storage before an uncommitted value overwrites it; the authors note that this is often called the write-ahead log protocol. The Redo Rule says that, before a transaction commits, every value it wrote must be in stable storage. The chapter then builds four algorithm families, undo/redo, undo/no-redo, no-undo/redo and no-undo/no-redo, and maps them to Haerder and Reuter's STEAL and FORCE. It covers logging, checkpoints, including fuzzy ones, and restart. Section 6.8 extends the ideas to media failures.",
+  "notes_slide2": "Chapter 7 moves to distributed systems, still without replication. A distributed transaction must commit at all sites or abort at all of them, but sites and links fail independently. An atomic commitment protocol solves this. In two-phase commit, the coordinator asks every participant to vote. A participant that votes Yes gives up its right to abort alone and enters an uncertainty period; if the coordinator fails then, the participant may be blocked until it learns the decision. Three-phase commit adds a round to avoid blocking when only sites fail, at the cost of more messages. Chapter 8 covers replicated data. The goal is one-copy serializability: users should see the same results as on a database with a single copy. The simple write-all approach breaks when a site is down. Available-copies algorithms write to the copies that are up, but cannot tolerate communication failures. Quorum consensus gives each copy votes and requires overlapping read and write quorums, the same rule Aurora uses with six copies. Read these chapters after the lessons."
+ }
+]

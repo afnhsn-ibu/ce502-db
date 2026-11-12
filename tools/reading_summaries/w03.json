@@ -1,0 +1,170 @@
+[
+ {
+  "label": "Eswaran et al. 1976",
+  "kind": "Required",
+  "course_key": "Eswaran et al. 1976, Consistency and Predicate Locks (CACM 19(11))",
+  "short_title": "Two-Phase Locking Guarantees Consistent Schedules",
+  "citation": "Eswaran, K. P., Gray, J. N., Lorie, R. A., & Traiger, I. L. (1976). The notions of consistency and predicate locks in a database system. Communications of the ACM, 19(11), 624–633. https://doi.org/10.1145/360363.360369",
+  "problem": "Running transactions at the same time is fast, but interleaved actions can show a transaction a half-changed state. Four IBM researchers ask which locking rules always prevent this, and what to lock when queries select rows by value.",
+  "key_ideas": [
+   "A schedule is consistent if it has the same dependencies as some serial schedule",
+   "Transactions must be well-formed (lock before acting) and two-phase (no lock after an unlock)",
+   "Phantoms: locks on existing rows cannot stop a new matching row from appearing"
+  ],
+  "key_term": {
+   "term": "Two-phase transaction",
+   "definition": "A transaction that acquires locks in a growing phase and requests no new lock after its first unlock"
+  },
+  "slide2_title": "Lock the Condition, Not Only the Rows",
+  "findings": [
+   "If all transactions are well-formed and two-phase, every legal schedule is consistent",
+   "If one transaction breaks a rule, a legal but inconsistent schedule can always be built",
+   "Predicate overlap is undecidable in general, so locks use simple predicates on constants"
+  ],
+  "course_link": "Lesson 3-2's Two-Phase Locking slide states this theorem, and Lesson 3-1's phantom slide its problem. In Practice 3, E4 at Read Committed shows a phantom: the count goes 2 → 3.",
+  "limitation": "Predicate locks were never built as proposed, because testing overlap is costly. Real systems lock index ranges or, like PostgreSQL, use snapshots.",
+  "note_question": "Use the Napa accounts example: why does locking only existing rows break consistency, and what does a predicate lock add?",
+  "notes_slide1": "Eswaran, Gray, Lorie and Traiger worked at IBM's research laboratory in San Jose, where System R was built. The paper starts from consistency constraints: assertions, such as A equals B, that the data must satisfy. A transfer between two accounts breaks such a rule for a moment, so the unit of consistency is the transaction, not the single action. Running transactions one after another is always safe but slow. Interleaving them is faster, but then one transaction may see another's half-finished work. The authors define a schedule as one interleaving of the actions of several transactions. A schedule is consistent when it has the same dependencies as some serial schedule. The main result of section 2 is a pair of rules. A transaction must be well-formed: it locks each entity before acting on it. It must also be two-phase: it acquires locks in a growing phase, and after its first unlock it acquires no more. Figure 5 shows how a transaction that locks again after an unlock can see an inconsistent state.",
+  "notes_slide2": "The authors prove that the two rules are sufficient: if every transaction is well-formed and two-phase, every legal schedule is consistent. They also show the converse: if a transaction breaks either rule, another transaction can be written that forms a legal but inconsistent schedule with it. A recovery argument adds that write locks should be held to the end of the transaction. Section 3 turns to relational databases, where queries select rows by value. In their example, a transaction checks that the balances of all Napa accounts add up to the Napa assets. If another transaction inserts a new Napa account during the check, the check sees an inconsistent state. The missing row is a phantom, and no row lock can cover it. Their answer is the predicate lock, for example on Location = Napa. Two predicate locks conflict if one is a write lock and some row, existing or not, satisfies both. Because overlap of arbitrary predicates cannot be decided, they restrict locks to simple predicates that compare fields with constants."
+ },
+ {
+  "label": "Berenson et al. 1995",
+  "kind": "Required",
+  "course_key": "Berenson et al. 1995, A Critique of ANSI SQL Isolation Levels (SIGMOD)",
+  "short_title": "ANSI SQL Isolation Levels Miss Key Anomalies",
+  "citation": "Berenson, H., Bernstein, P., Gray, J., Melton, J., O'Neil, E., & O'Neil, P. (1995). A critique of ANSI SQL isolation levels. In Proceedings of the 1995 ACM SIGMOD International Conference on Management of Data (SIGMOD '95) (pp. 1–10). ACM. https://doi.org/10.1145/223784.223785",
+  "problem": "SQL-92 defines four isolation levels by three phenomena described in English: dirty read, non-repeatable read and phantom. The six authors ask whether these definitions are precise and match the isolation that real systems give.",
+  "key_ideas": [
+   "Each phenomenon has a strict (anomaly) and a broad reading; only the broad one excludes bad histories",
+   "Adds dirty write (P0) and lost update (P4), and maps each level to locking rules",
+   "Defines snapshot isolation: read a snapshot taken at the start; the first committer wins"
+  ],
+  "key_term": {
+   "term": "Snapshot isolation",
+   "definition": "Each transaction reads committed data as of its start; two concurrent writers of one item cannot both commit"
+  },
+  "slide2_title": "Snapshot Isolation Is Strong, Yet Not Serializable",
+  "findings": [
+   "Forbidding the three strict ANSI anomalies does not ensure serializability: history H1 passes all",
+   "Snapshot isolation is stronger than READ COMMITTED; it prevents lost updates and strict phantoms",
+   "It still allows write skew, so it and REPEATABLE READ are incomparable: each allows what the other bans"
+  ],
+  "course_link": "Gives Lesson 3-3 its isolation-level table and the write skew slide. In Practice 3, E3 and E4 at Repeatable Read show snapshot isolation: an error, not a lost update, and no phantom.",
+  "limitation": "Written for SQL-92 and single-node systems. Its phenomena still act like locking rules; Adya et al. (2000) later gave implementation-free definitions.",
+  "note_question": "Why do the authors say the broad reading of the ANSI phenomena is the correct one? Use one of the histories H1 to H3.",
+  "notes_slide1": "The SQL-92 standard defines four isolation levels, from READ UNCOMMITTED to SERIALIZABLE, by which of three phenomena each level forbids: dirty read, non-repeatable (fuzzy) read and phantom. The authors, who include Jim Gray and Jim Melton, editor of the SQL standard, show that this approach has problems. Section 2 writes each phenomenon as a pattern in a history, with a short notation in which, for example, w1 applied to x is a write of x by transaction 1. Each English sentence can be read in two ways. The strict reading, called an anomaly (A1, A2, A3), forbids only an actual bad outcome. The broad reading, called a phenomenon (P1, P2, P3), forbids any pattern that might lead to one. Section 3 uses short histories to show the difference. In H1, a transfer of 40 between accounts x and y is read halfway by a second transaction, which sees a total of 60 instead of 100. H1 breaks none of the strict anomalies, so the broad reading is needed. The authors also add P0, dirty write, which the standard did not exclude at the lower levels.",
+  "notes_slide2": "With the broad readings and P0, the levels match the locking definitions of Table 2, which differ in how long read locks on items and predicates are held. Section 4 studies levels that commercial systems offered. Cursor Stability prevents the lost update (P4) for rows read through a cursor. Section 4.2 defines snapshot isolation. A transaction reads from a snapshot of data committed before its start, so it never waits to read. At commit it fails if a concurrent transaction that already committed wrote the same item: first-committer-wins. This prevents lost updates and the strict phantom A3, so snapshot isolation is stronger than READ COMMITTED. But its reads happen at one moment and its writes at another. In history H5, two transactions each read x and y and each change a different item, so together they break the rule that x + y must stay positive. This is write skew (A5B). REPEATABLE READ allows phantoms but not write skew, and snapshot isolation does the opposite, so neither is stronger. Table 4 compares all levels."
+ },
+ {
+  "label": "Ports & Grittner 2012",
+  "kind": "Required",
+  "course_key": "Ports & Grittner 2012, Serializable Snapshot Isolation in PostgreSQL (PVLDB 5(12))",
+  "short_title": "PostgreSQL Gets Serializability Without Blocking",
+  "citation": "Ports, D. R. K., & Grittner, K. (2012). Serializable snapshot isolation in PostgreSQL. Proceedings of the VLDB Endowment, 5(12), 1850–1861. https://doi.org/10.14778/2367502.2367523",
+  "problem": "Before version 9.1, PostgreSQL's SERIALIZABLE mode gave only snapshot isolation, which allows write skew. Strict two-phase locking would fix this but make readers block. Can a snapshot-based DBMS be serializable and still fast?",
+  "key_ideas": [
+   "Every snapshot isolation anomaly contains two adjacent rw-antidependencies",
+   "SSI runs transactions under snapshot isolation and aborts one when this dangerous structure appears",
+   "SIREAD locks record what each transaction read; they never block and are kept after commit"
+  ],
+  "key_term": {
+   "term": "rw-antidependency",
+   "definition": "T1 reads a version and a concurrent T2 writes a newer one, so T1 must come before T2 in any serial order"
+  },
+  "slide2_title": "Serializable Costs Little More Than Snapshot Isolation",
+  "findings": [
+   "In TPC-C-like and RUBiS tests, SSI cost less than 7% throughput compared with snapshot isolation",
+   "SSI beat strict 2PL on read-heavy work: 422 against 208 requests per second in RUBiS",
+   "Safe snapshots and DEFERRABLE let read-only transactions run without SSI overhead or aborts"
+  ],
+  "course_link": "Explains the Serializable row of Lesson 3-3's 'How PostgreSQL Implements the Levels'. In the Practice 3 extension, E5 write skew fails with 40001 at Serializable; retry_demo.py retries it.",
+  "limitation": "Describes one release (9.1) on one server. SSI also aborts some safe transactions (false positives), so every application must retry error 40001.",
+  "note_question": "Explain the doctors-on-call write skew with rw-antidependencies. Why does SSI abort a transaction where snapshot isolation does not?",
+  "notes_slide1": "Ports, of MIT, and Grittner, of the Wisconsin court system, describe how they added a true serializable level to PostgreSQL 9.1. Before that release, users who asked for SERIALIZABLE received snapshot isolation, as Oracle users still do. Section 2 shows why this matters. In the first example, two doctors are on call. Two transactions each check that at least two doctors are on call, then each takes a different doctor off call. Under snapshot isolation both commit, and nobody is left on call. The second example needs three transactions, one of them read-only: a report on the previous batch of receipts can miss a receipt that is added to that batch later. Such errors are silent and hard to reproduce. The Wisconsin courts had hundreds of tables and more than 20 programmers, so they could not check every pair of transactions by hand. They wanted the database to guarantee serializability. Strict two-phase locking was rejected, because PostgreSQL users expect that readers do not block writers and writers do not block readers.",
+  "notes_slide2": "Section 3 explains the theory. Adya described an execution as a graph with an edge for each dependency between transactions: write-read, write-write or read-write. A read-write antidependency occurs when one transaction does not see another's write, so it must come first in any serial order. Fekete and colleagues showed that every cycle, and so every anomaly, contains two such edges in a row, T1 → T2 → T3, between concurrent transactions. The SSI technique of Cahill and colleagues checks only for this dangerous structure, which is cheaper than searching for cycles. When it appears, one transaction is aborted with a serialization failure. Some aborts are false positives, because not every dangerous structure closes a cycle. To see reads, PostgreSQL takes SIREAD locks on tuples, pages or whole relations, and on index gaps to catch phantoms. These locks block nobody. Later sections add read-only optimisations and keep memory bounded. In the benchmarks, SSI ran close to snapshot isolation and far ahead of locking on read-heavy workloads."
+ },
+ {
+  "label": "Kung & Robinson 1981",
+  "kind": "Optional",
+  "course_key": "Kung & Robinson 1981, On Optimistic Methods for Concurrency Control (ACM TODS 6(2))",
+  "short_title": "Validate at Commit Instead of Locking",
+  "citation": "Kung, H. T., & Robinson, J. T. (1981). On optimistic methods for concurrency control. ACM Transactions on Database Systems, 6(2), 213–226. https://doi.org/10.1145/319566.319567",
+  "problem": "Locking costs time even when conflicts are rare: lock overhead, deadlock detection, and busy nodes kept locked during disk waits. Kung and Robinson ask whether transactions can run with no locks and be checked only at the end.",
+  "key_ideas": [
+   "Each transaction has a read phase, a validation phase and, if validation succeeds, a write phase",
+   "In the read phase, writes go to private copies, so other transactions cannot see them",
+   "Transactions get numbers when their read phase ends; validation checks this serial order"
+  ],
+  "key_term": {
+   "term": "Validation",
+   "definition": "The check, after the read phase, that writes of earlier-numbered transactions did not affect this one"
+  },
+  "slide2_title": "Optimism Wins When Conflicts Are Rare",
+  "findings": [
+   "Three conditions on read sets, write sets and phase order guarantee serial equivalence",
+   "Serial validation is simple; parallel validation allows more concurrency at a higher cost",
+   "In their B-tree example, two concurrent inserts conflict with a probability below 0.0007"
+  ],
+  "course_link": "Lesson 3-2 teaches the pessimistic family; this is the optimistic one. Compare Practice 3's E3 at Repeatable Read, where the second writer fails and must retry rather than wait.",
+  "limitation": "Analysis without an implementation or measurements. Under frequent conflicts, restarts waste work, and the paper leaves the choice of method open.",
+  "note_question": "Which workload you know would suit optimistic control, and which would suffer many restarts? Why?",
+  "notes_slide1": "In 1981 most concurrency control used locks. Kung and Robinson, at Carnegie Mellon University, list the costs of locking. Even read-only queries must lock. Deadlock detection adds overhead. A busy node, such as the root of a tree, may stay locked while the system waits for the disk. Locks must be held to the end so that a transaction can abort itself. Most important, locks are often needed only in the worst case: if the database is large and each transaction touches little of it, conflicts are rare. The authors therefore propose methods that rely on restarting transactions instead of making them wait. Reads are never restricted. During the read phase, every write goes to a local copy. At the end, a validation phase decides whether the changes can be made global. If so, the write phase swaps in the copies, which is fast because objects are named, not addressed. If not, the transaction starts again as a new one. The approach cannot deadlock, although a transaction can starve.",
+  "notes_slide2": "Section 3 bases validation on serial equivalence: the result must equal that of some serial order. Each transaction gets a number from a global counter when its read phase ends. For every earlier-numbered transaction Ti, one of three conditions must hold for Tj. Ti finished writing before Tj started. Or Ti's write set does not meet Tj's read set, and Ti finished writing before Tj began writing. Or Ti's write set meets neither Tj's read set nor its write set, and Ti finished reading first. Section 4 gives methods with a serial validation step, and section 5 gives fully parallel validation, which costs more. Section 6 analyses concurrent inserts into a large B-tree. Read and write sets hold only a few pages, and for a tree of order 199 the chance that one insert forces another to restart is below 0.0007. The conclusion contrasts the two approaches. Locking makes transactions wait and must handle deadlock. Optimism backs transactions up and must handle starvation."
+ },
+ {
+  "label": "Cahill et al. 2008",
+  "kind": "Optional",
+  "course_key": "Cahill, Röhm & Fekete 2008, Serializable Isolation for Snapshot Databases (SIGMOD)",
+  "short_title": "Detect Dangerous Structures to Make SI Serializable",
+  "citation": "Cahill, M. J., Röhm, U., & Fekete, A. D. (2008). Serializable isolation for snapshot databases. In Proceedings of the 2008 ACM SIGMOD International Conference on Management of Data (SIGMOD '08) (pp. 729–738). ACM. https://doi.org/10.1145/1376616.1376690",
+  "problem": "Snapshot isolation is fast because readers never wait for writers, but it allows anomalies such as write skew. Earlier fixes changed the application programs. Cahill, Röhm and Fekete ask whether the DBMS can make it serializable.",
+  "key_ideas": [
+   "Every SI anomaly has two consecutive rw-dependencies between concurrent transactions",
+   "Each transaction keeps two flags, inConflict and outConflict, set when rw-conflicts are found",
+   "A transaction with both flags set is a pivot; then one transaction is aborted"
+  ],
+  "key_term": {
+   "term": "SIREAD lock",
+   "definition": "A lock mode that records a read under snapshot isolation; it never blocks a writer but reveals rw-conflicts"
+  },
+  "slide2_title": "Serializable Isolation at Nearly the Cost of SI",
+  "findings": [
+   "Built into Oracle Berkeley DB, which already had snapshot isolation, with little new code",
+   "On the SmallBank benchmark, throughput stayed close to SI and well above strict 2PL",
+   "Some aborts are false positives: a pivot does not always lie on a real cycle"
+  ],
+  "course_link": "The algorithm behind the fix for Lesson 3-3's write skew slide. In the Practice 3 extension, E5 fails at Serializable with 40001: PostgreSQL's version of this method found the pivot.",
+  "limitation": "Berkeley DB locks whole pages, which hid phantoms. Row-level phantoms were handled only in the later journal version and Cahill's thesis.",
+  "note_question": "Why does SSI wait for two rw-conflicts in a row before aborting, rather than aborting at the first one?",
+  "notes_slide1": "By 2008, snapshot isolation was offered by Oracle, SQL Server and PostgreSQL. Many applications used it because reads never block. But, as Berenson and colleagues showed, it is not serializable. Earlier work by Fekete and others gave a way to analyse a fixed set of application programs and, when needed, change them, for example by adding extra writes. That analysis is hard and must be repeated whenever the programs change. Cahill, Röhm and Fekete, at the University of Sydney, take another route: they change the concurrency control inside the DBMS. They use the theory that every non-serializable execution under snapshot isolation contains a dangerous structure: two consecutive read-write antidependencies, T1 → T2 → T3, where each pair runs concurrently. The algorithm records reads with a new lock mode, SIREAD, which never blocks a writer. When a write meets an SIREAD lock, or a read finds a newer version than its snapshot, a rw-conflict is recorded by setting flags on the two transactions.",
+  "notes_slide2": "Each transaction has two flags. inConflict is set when another transaction has a rw-conflict pointing into it, and outConflict when it has one pointing out. A transaction with both flags set is the pivot of a possible cycle, and the algorithm aborts a transaction, preferably the pivot if it has not committed yet. No cycle search is needed, and other dependency types are not tracked, so the check is cheap. The price is false positives: both flags may be set although no cycle exists. SIREAD locks must be kept after a transaction commits, until all transactions concurrent with it have finished, because conflicts can appear later. The authors added the algorithm to Oracle Berkeley DB, which already had snapshot isolation and a lock manager. They compared it with snapshot isolation and strict two-phase locking on the SmallBank benchmark. Serializable SI performed close to snapshot isolation and much better than locking under contention. PostgreSQL 9.1 later adopted the method, as Ports and Grittner describe."
+ },
+ {
+  "label": "Adya et al. 2000",
+  "kind": "Optional",
+  "course_key": "Adya, Liskov & O'Neil 2000, Generalized Isolation Level Definitions (ICDE)",
+  "short_title": "Define Isolation by Dependency Graphs, Not Locks",
+  "citation": "Adya, A., Liskov, B., & O'Neil, P. (2000). Generalized isolation level definitions. In Proceedings of the 16th International Conference on Data Engineering (ICDE 2000) (pp. 67–78). IEEE. https://doi.org/10.1109/ICDE.2000.839388",
+  "problem": "Berenson et al. repaired the ANSI levels with phenomena P0 to P3, but these act like locking rules and forbid valid optimistic or multiversion histories. Adya, Liskov and O'Neil seek definitions that any implementation can meet.",
+  "key_ideas": [
+   "Dependencies between committed transactions: write (ww), read (wr) and anti-dependency (rw)",
+   "Each dependency is an edge in the Direct Serialization Graph (DSG) of a history",
+   "Each level forbids certain cycles or reads, called phenomena G0, G1 and G2"
+  ],
+  "key_term": {
+   "term": "Serialization graph",
+   "definition": "A graph with one node per committed transaction and an edge for each dependency between two of them"
+  },
+  "slide2_title": "PL-3 Means No Cycles in the Serialization Graph",
+  "findings": [
+   "PL-1 forbids G0, a cycle made only of write dependencies between transactions",
+   "PL-2 forbids G1: reading aborted or intermediate data, and cycles of ww and wr edges",
+   "PL-2.99 also forbids item anti-dependency cycles; PL-3 forbids every cycle (G2)"
+  ],
+  "course_link": "Adds theory to Lesson 3-1's 'When Is an Interleaved Schedule Correct?'. Draw the graph for Practice 3's E5 write skew: two rw edges form a cycle, so it is not PL-3.",
+  "limitation": "Gives definitions, not a mechanism or measurements. Further levels, such as snapshot isolation, are defined in Adya's 1999 thesis, not here.",
+  "note_question": "Draw the dependency graph for the doctors-on-call write skew. Which phenomenon does it show, and which level forbids it?",
+  "notes_slide1": "Berenson and colleagues showed that the English definitions in the SQL standard are ambiguous, and proposed the broad phenomena P0 to P3 instead. Adya, Liskov and O'Neil, who was also an author of that critique, point out a new problem. The broad phenomena forbid patterns of operations, for example a transaction writing an item that another uncommitted transaction has read. These are, in effect, locking rules. An optimistic or multiversion system may allow such a pattern and still produce a serializable result, yet by the letter of P0 to P3 it would not even count as SERIALIZABLE. As optimistic and distributed systems spread, the authors wanted definitions that do not prescribe an implementation. They model a history with versions of objects, and define three kinds of direct dependency between committed transactions: write dependency (ww), read dependency (wr) and anti-dependency (rw). Each dependency becomes an edge in the Direct Serialization Graph (DSG). Dependencies caused by predicate reads, such as a query on all rows that match a condition, are included too.",
+  "notes_slide2": "Each isolation level is then defined by the phenomena it forbids, stated on the history and its graph. G0 is a cycle made only of write dependencies. G1 has three parts: G1a, reading data written by an aborted transaction; G1b, reading an intermediate value that its writer later changed; and G1c, a cycle of write and read dependencies. G2 is any cycle that contains an anti-dependency edge. PL-1 forbids G0. PL-2 forbids G1 and gives the guarantees of READ COMMITTED. PL-2.99 also forbids cycles with item anti-dependencies, like REPEATABLE READ, while PL-3 forbids all of G2 and so equals serializability. Because the rules speak only about committed results, locking, optimistic and multiversion systems can all be checked against them. Adya's thesis extends the framework to further levels, including snapshot isolation. The same graph view underlies the SSI papers in this list, and modern tools that test whether databases keep their isolation promises."
+ }
+]

@@ -1,0 +1,170 @@
+[
+ {
+  "label": "Mikolov et al. 2013",
+  "kind": "Required",
+  "course_key": "Mikolov et al. 2013, Efficient Estimation of Word Representations in Vector Space (arXiv:1301.3781)",
+  "short_title": "Simpler Models Learn Better Word Vectors Faster",
+  "citation": "Mikolov, T., Chen, K., Corrado, G., & Dean, J. (2013). Efficient estimation of word representations in vector space. arXiv:1301.3781. https://doi.org/10.48550/arXiv.1301.3781",
+  "problem": "Neural language models learned useful word vectors, but their hidden layers made training slow. None had been trained on more than a few hundred million words, with vectors of 50 to 100 dimensions.",
+  "key_ideas": [
+   "Remove the costly non-linear hidden layer; keep a shared projection and a log-linear output",
+   "CBOW predicts a word from the average of its context words, four before and four after",
+   "Skip-gram does the reverse: it predicts the surrounding words from the current word"
+  ],
+  "key_term": {
+   "term": "Word analogy test",
+   "definition": "A question like Athens : Greece = Oslo : ?, answered by the word nearest to Greece − Athens + Oslo"
+  },
+  "slide2_title": "Skip-gram Wins on Meaning, CBOW on Speed",
+  "findings": [
+   "The test set has 8,869 semantic and 10,675 syntactic questions; only exact answers count",
+   "With 640 dimensions, skip-gram scored 55% on semantic questions, against 24% for CBOW",
+   "Dimensions and training data must grow together; growing only one gives small gains"
+  ],
+  "course_link": "Lesson 10-1's Directions Can Carry Meaning slide uses the word offsets this paper measures. Practice 10 applies the same nearest-vector idea to whole course descriptions.",
+  "limitation": "Gives each word one fixed vector, whatever its sense, and ignores word form, as the authors admit. Analogy accuracy is a narrow test of quality.",
+  "note_question": "The analogy test counts a synonym as a wrong answer. What does the test measure well, and what does it miss about word vectors?",
+  "notes_slide1": "Many language systems in 2013 treated words as atomic symbols: indices in a vocabulary, with no notion of similarity. Neural network language models had shown that learning a dense vector for each word works better, but they were expensive to train. Section 1 sets the goal: learn high-quality vectors from billions of words and vocabularies of millions of words. Section 2 explains where the cost comes from. In a feedforward model, most of the work is in the dense, non-linear hidden layer, because hierarchical softmax with a Huffman tree already makes the output layer cheap. Section 3 therefore removes the hidden layer and proposes two log-linear models. The continuous bag-of-words model, CBOW, averages the vectors of the context words, four before and four after, and predicts the middle word; word order is ignored. The continuous skip-gram model takes the current word and predicts words within a range before and after it, sampling distant words less often. Each word gives several training examples, so skip-gram is slower.",
+  "notes_slide2": "Section 4.1 introduces a test set built from word pairs: five types of semantic questions, such as capital cities and currencies, and nine types of syntactic ones, such as plurals and past tenses. To answer big is to biggest as small is to what, the authors compute vector(biggest) − vector(big) + vector(small) and look for the nearest word by cosine distance. Only an exact match counts. The results use a Google News corpus of about 6 billion tokens. Accuracy grows with both vector size and data, and the two must grow together. On the same data with 640 dimensions, skip-gram reached 55% on semantic questions, against 24% for CBOW, while CBOW was slightly better on syntax. On one CPU, CBOW trained on 783 million words in about a day and skip-gram in about three days. With the DistBelief framework, 1000-dimensional vectors were trained on 6 billion words in about two days on over 100 CPU cores. The authors then released the word2vec tool, which made word vectors a standard building block."
+ },
+ {
+  "label": "Reimers & Gurevych 2019",
+  "kind": "Required",
+  "course_key": "Reimers & Gurevych 2019, Sentence-BERT (EMNLP-IJCNLP)",
+  "short_title": "Siamese BERT Makes Sentence Search Fast",
+  "citation": "Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. In Proceedings of EMNLP-IJCNLP 2019 (pp. 3982–3992). Association for Computational Linguistics. https://doi.org/10.18653/v1/D19-1410",
+  "problem": "BERT compares two sentences well only when both enter the network together. Finding the most similar pair among 10,000 sentences needs about 50 million runs: about 65 hours on a V100 GPU.",
+  "key_ideas": [
+   "Add a pooling step, by default the mean of BERT's output vectors, to get one fixed vector",
+   "Fine-tune with shared weights, a siamese network, on about 1 million labelled NLI pairs",
+   "Compare stored vectors with cosine similarity instead of running BERT on every pair"
+  ],
+  "key_term": {
+   "term": "Siamese network",
+   "definition": "Two copies of one network with shared weights; each encodes one sentence, and the outputs are compared"
+  },
+  "slide2_title": "From 65 Hours to About 5 Seconds, With Good Accuracy",
+  "findings": [
+   "Plain BERT vectors, averaged or from the CLS token, did worse than averaged GloVe on STS",
+   "Without STS training, SBERT beat InferSent by 11.7 points over seven STS tasks",
+   "Trained on STS data, a cross-encoder BERT still scored higher: speed costs some accuracy"
+  ],
+  "course_link": "Lesson 10-1's How a Model Produces an Embedding follows this design. In Practice 10, all-MiniLM-L6-v2, a sentence-transformers model, embeds each course once for Chroma.",
+  "limitation": "Trained mainly on English NLI data, so quality varies by domain: it was weaker than Universal Sentence Encoder on the SICK-R data set.",
+  "note_question": "SBERT trades some accuracy for speed. When would you still use a slower cross-encoder in a search service, and where?",
+  "notes_slide1": "BERT, a pre-trained transformer, set new records on sentence-pair tasks such as semantic textual similarity, STS. It works as a cross-encoder: both sentences are fed into the network together, and a score comes out. For search this is far too slow. With n sentences, finding the most similar pair needs n(n − 1)/2 runs: for 10,000 sentences, 49,995,000 runs, or about 65 hours on a V100 GPU. A common shortcut was to feed one sentence into BERT and average its output vectors, or take the output of the special CLS token. Section 1 shows that this gives poor sentence embeddings, often worse than averaged GloVe word vectors. Section 3 presents SBERT. A pooling layer turns BERT's token outputs into one fixed-size vector; the default is the mean. To make these vectors meaningful, the network is fine-tuned as a siamese network: the same weights encode sentence A and sentence B. Three training objectives are tested: classification, regression on the cosine similarity, and a triplet loss.",
+  "notes_slide2": "The main model is trained with the classification objective on SNLI and MultiNLI, about one million sentence pairs labelled as contradiction, entailment or neutral, for one epoch. The vectors u and v and their difference |u − v| feed a softmax classifier. At inference time the classifier is dropped: each sentence is encoded once, and two sentences are compared with cosine similarity. For the 10,000-sentence task, the paper reports about 5 seconds to compute the embeddings and about 0.01 seconds for the cosine comparisons. With an index, finding the most similar of over 40 million Quora questions could take milliseconds. Without any STS training, SBERT beat InferSent by 11.7 points and Universal Sentence Encoder by 5.5 points on seven STS tasks. When both are trained on STS data, a cross-encoder BERT is still more accurate. The code became the sentence-transformers library. Its pattern is the vector database pattern: embed each item once, store the vector, and compare it many times."
+ },
+ {
+  "label": "Pan, Wang & Li 2024",
+  "kind": "Required",
+  "course_key": "Pan, Wang & Li 2024, Survey of Vector Database Management Systems (VLDB Journal 33)",
+  "short_title": "Vector Data Needs Its Own Database Techniques",
+  "citation": "Pan, J. J., Wang, J., & Li, G. (2024). Survey of vector database management systems. The VLDB Journal, 33(5), 1591–1615. https://doi.org/10.1007/s00778-024-00864-x",
+  "problem": "Over 20 commercial vector databases appeared within five years, driven by LLMs and unstructured data. Yet vector search is vague, costly and hard to index, and no survey covered the techniques.",
+  "key_ideas": [
+   "Five obstacles: vague similarity, costly comparisons, large size, no order, mixing attributes",
+   "Query processing: similarity scores such as cosine, query types, interfaces and operators",
+   "Indexes are tables, trees or graphs; quantisation compresses vectors to save space"
+  ],
+  "key_term": {
+   "term": "Hybrid query",
+   "definition": "A k-nearest-neighbour search whose results must also satisfy a predicate on attributes; also called filtered"
+  },
+  "slide2_title": "No Single Index or Score Fits Every Workload",
+  "findings": [
+   "No principles yet guide the choice of score; in practice it rests on rules from experience",
+   "HNSW is easy to build, can be updated and answers queries fast, so many systems support it",
+   "Systems are native, e.g. Milvus, or extended, e.g. PASE; libraries like Faiss only search"
+  ],
+  "course_link": "Lesson 10-2's scores and exact k-NN, and Lesson 10-3's metadata filters, follow sections 2 and 3. In Practice 10 you use Chroma's cosine space, n_results and where.",
+  "limitation": "The field moves fast: the survey reflects 2023, so newer systems and features are missing. Sections 2 and 3 are dense and assume algorithm background.",
+  "note_question": "Which of the five obstacles did you meet in Practice 10, for example in Part B's timings or in Part C's filtered query?",
+  "notes_slide1": "Pan, Wang and Li note that similarity search has been studied for half a century and embedding-based retrieval for over ten years, yet over 20 commercial vector database management systems, VDBMSs, appeared in only five years. Large language models and the growth of unstructured data created the demand. Entities such as documents and images are encoded by an embedding model into D-dimensional vectors and then stored. A VDBMS has two main parts: a query processor and a storage manager with search indexes. Section 1 lists five obstacles. Search criteria are vague, because similarity is not a precise predicate. A comparison costs O(D) time, not O(1). Vectors are large, and a query needs the full vector. Vectors have no natural sort order, so classic range partitioning does not work. Finally, combining vector search with attribute filters can return fewer results than expected. The survey then groups techniques by these obstacles: query processing, storage and indexing, optimisation and execution, and the systems themselves.",
+  "notes_slide2": "Section 2 covers query processing. Similarity scores include the inner product, cosine similarity, Euclidean and other Minkowski distances, and Mahalanobis and Hamming distances. Cosine similarity equals the inner product of normalised vectors. The authors admit there are no principles for choosing a score. Query types include k-nearest-neighbour, approximate and range search, with variants: predicated or hybrid queries, batched queries and multi-vector queries. Accuracy is measured with precision and recall, speed with latency and throughput. Interfaces differ: Chroma offers a Python API of nine commands, while pgvector extends SQL with a distance operator. Section 3 covers indexing. Brute-force search costs O(DN), so indexes partition the data in order to compare fewer vectors. Table-based indexes, such as LSH, are easy to update. Tree-based indexes aim for logarithmic search. Graph-based indexes, such as HNSW, work well in practice but have less theory behind them. Quantisation compresses vectors with some loss. Week 11 studies these indexes in detail."
+ },
+ {
+  "label": "Wang et al. 2021",
+  "kind": "Optional",
+  "course_key": "Wang et al. 2021, Milvus (SIGMOD)",
+  "short_title": "A Vector Library Is Not Yet a Vector Database",
+  "citation": "Wang, J., Yi, X., Guo, R., Jin, H., Xu, P., et al. (2021). Milvus: A purpose-built vector data management system. In Proceedings of the 2021 International Conference on Management of Data (SIGMOD '21) (pp. 2614–2627). ACM. https://doi.org/10.1145/3448016.3457550",
+  "problem": "Libraries such as Faiss search vectors fast but assume static data held in one machine's memory. Relational extensions add a vector column but do not treat vectors as first-class data.",
+  "key_ideas": [
+   "Builds on Faiss, with quantisation and graph indexes and an interface for new index types",
+   "Handles inserts and deletes like an LSM tree: memory first, then segments merged on disk",
+   "Separates shared storage on Amazon S3 from stateless compute nodes for elastic scaling"
+  ],
+  "key_term": {
+   "term": "Attribute filtering",
+   "definition": "Searching only vectors whose attributes meet a condition, e.g. similar T-shirts that cost under 100 dollars"
+  },
+  "slide2_title": "Partitioning by Attribute Speeds Up Filtered Search",
+  "findings": [
+   "Its partition-based filtering was up to 13.7 times faster than the best earlier strategy",
+   "Milvus ran 6.4 to 47.0 times faster than Vearch in the authors' own experiments",
+   "Ten applications were built on it, from image and video search to COVID-19 dataset search"
+  ],
+  "course_link": "Lesson 10-3's slides on metadata filters and on the landscape of systems meet Milvus. Practice 10's where filters and exercise 6 face the problem its section 4 solves.",
+  "limitation": "Written by the company behind Milvus, which ran the benchmarks itself. It shows the 2021 design, which was already being rebuilt for the cloud.",
+  "note_question": "Milvus keeps new vectors in memory and flushes them as segments, like Bigtable's memtable. Why does that suit vector data?",
+  "notes_slide1": "Milvus was built at the company Zilliz, with Purdue University. Section 1 explains the demand: applications turn images, videos and texts into vectors of tens to thousands of dimensions and need to search them while the data changes. YouTube, for example, receives 500 hours of video per minute. The authors list what existing work lacks. Libraries such as Faiss and SPTAG assume static data that fits in one machine's memory, offer no advanced queries and are not tuned for both CPUs and GPUs. Relational extensions, such as AnalyticDB-V and PASE on PostgreSQL, add a vector column but keep optimisers and storage engines that were not designed for vectors. Milvus takes the opposite view, that one size does not fit all, and is purpose-built. It has SDKs for Python, Java, Go and C++ and a RESTful API. It supports quantisation-based indexes, such as IVF_FLAT, IVF_SQ8 and IVF_PQ, and graph-based indexes, such as HNSW, with an interface for adding new ones.",
+  "notes_slide2": "Section 2.3 explains dynamic data. New vectors go first to an in-memory MemTable. When it reaches a size threshold, or every second, it becomes immutable and is flushed to disk as a segment. Small segments are merged into larger ones, and deletions take effect during merges, the same idea as Bigtable's compactions. Snapshot isolation lets queries run while writes continue. Section 3 tunes query processing for CPU caches, SIMD instructions and multiple GPUs. Section 4 handles advanced queries. For attribute filtering, the paper compares four earlier strategies, such as filtering on the attribute first and then scanning the vectors, and adds a fifth: partition the data by a frequently filtered attribute, so a query visits only the relevant partitions. For multi-vector queries, for example a face vector and a posture vector for one person, it offers vector fusion and iterative merging. Section 5.3 describes the distributed design. The experiments compare Milvus with Vearch, SPTAG and three commercial systems."
+ },
+ {
+  "label": "Pennington et al. 2014",
+  "kind": "Optional",
+  "course_key": "Pennington, Socher & Manning 2014, GloVe (EMNLP)",
+  "short_title": "Word Vectors From Global Co-occurrence Counts",
+  "citation": "Pennington, J., Socher, R., & Manning, C. D. (2014). GloVe: Global vectors for word representation. In Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP) (pp. 1532–1543). Association for Computational Linguistics. https://doi.org/10.3115/v1/D14-1162",
+  "problem": "Count-based methods such as LSA use corpus statistics well but do poorly on analogies. Window methods such as skip-gram do well on analogies but ignore global counts. Can one model do both?",
+  "key_ideas": [
+   "Ratios of co-occurrence probabilities, not raw probabilities, separate one meaning from another",
+   "A weighted least-squares model fits word vectors to the logarithm of co-occurrence counts",
+   "It trains only on non-zero matrix entries; a weight function limits very frequent pairs"
+  ],
+  "key_term": {
+   "term": "Co-occurrence matrix",
+   "definition": "A table whose entry Xij counts how often word j appears in the context of word i in a corpus"
+  },
+  "slide2_title": "75% on the Word Analogy Task With 42 Billion Tokens",
+  "findings": [
+   "300-dimensional GloVe trained on 42 billion tokens reached 75.0% on the analogy test",
+   "On 6 billion tokens it scored 71.7%, against 69.1% for skip-gram trained by the authors",
+   "It also beat other models on word similarity tasks and on CoNLL-2003 named entities"
+  ],
+  "course_link": "Read it with Lesson 10-1's Where Embeddings Come From slide, as a second route to word vectors. Sentence-BERT, behind Practice 10's model, used averaged GloVe as a baseline.",
+  "limitation": "Still one vector per word, with no context. The comparison with word2vec uses settings that the GloVe authors chose themselves.",
+  "note_question": "word2vec learns from local windows; GloVe fits global counts. Why might both still produce the same analogy structure?",
+  "notes_slide1": "Pennington, Socher and Manning, at Stanford, start from a question that word2vec left open: why does vector arithmetic capture analogies at all? They compare two families of methods. Global matrix factorisation methods, such as latent semantic analysis, build a large matrix of counts from the whole corpus and reduce it. They use the statistics efficiently but do relatively poorly on analogies. Local context window methods, such as skip-gram, learn from one window at a time. They do well on analogies but make little use of global counts. Section 3 builds the model from an example. In a 6 billion token corpus, the word solid appears much more often near ice than near steam, and gas the reverse, while water and fashion appear about equally with both. The ratio of the two probabilities is 8.9 for solid and about 0.085 for gas, but close to 1 for water and fashion. So ratios, not raw probabilities, carry meaning. GloVe chooses vectors whose dot products, plus bias terms, match the logarithm of the counts.",
+  "notes_slide2": "Fitting every pair equally would cause problems. Most entries in the matrix are zero, between 75% and 95% depending on vocabulary and corpus, and very frequent pairs, such as those with the word the, carry little meaning. GloVe therefore trains only on non-zero entries and weights each pair with a function that grows with the count up to a cut-off of 100 and then stays flat. Section 3.1 shows that skip-gram can be rewritten in a similar form, so the two families are less different than they look. The experiments use corpora from 1 billion to 42 billion tokens, a vocabulary of 400,000 words and a window of ten words on each side. On the 19,544 analogy questions from the word2vec paper, GloVe reached 75.0% with 300 dimensions on 42 billion tokens. For the same corpus, vocabulary, window and training time, the authors report that GloVe beat word2vec. Pre-trained GloVe vectors were released and are still used as a simple baseline, for example in the Sentence-BERT paper."
+ },
+ {
+  "label": "Radford et al. 2021",
+  "kind": "Optional",
+  "course_key": "Radford et al. 2021, CLIP (ICML)",
+  "short_title": "Captions Teach a Model to Embed Images and Text",
+  "citation": "Radford, A., Kim, J. W., Hallacy, C., Ramesh, A., et al. (2021). Learning transferable visual models from natural language supervision. In Proceedings of the 38th International Conference on Machine Learning (PMLR, Vol. 139, pp. 8748–8763). PMLR.",
+  "problem": "Vision models were trained to predict a fixed set of labels, such as ImageNet's classes, so each new concept needed new labelled data. Can raw text from the internet supervise image models instead?",
+  "key_ideas": [
+   "Train on 400 million image and text pairs collected from the internet, a data set called WIT",
+   "Contrastive goal: in each batch, match every image with its own caption among all pairings",
+   "An image encoder and a text encoder map both into one space, compared by cosine similarity"
+  ],
+  "key_term": {
+   "term": "Zero-shot transfer",
+   "definition": "Using a model on a new task with no task-specific training, e.g. with classes given only as text"
+  },
+  "slide2_title": "Zero-Shot CLIP Matches ResNet-50 on ImageNet",
+  "findings": [
+   "Zero-shot, it matched the original ResNet-50 on ImageNet without its 1.28 million examples",
+   "The contrastive goal learned 4 times faster than predicting a bag of caption words",
+   "It beat a linear probe on ResNet-50 features on 16 of 27 data sets, but was weak on MNIST"
+  ],
+  "course_link": "Lesson 10-1 lists CLIP among embedding models. A Chroma collection like Practice 10's could store CLIP image vectors and answer text queries by cosine distance.",
+  "limitation": "Needs very large compute: the authors estimate 1000 times more to reach the state of the art. The labels a user offers can produce biased results.",
+  "note_question": "A museum wants search by photo or by sentence. What would you store for each artwork in a vector database if you used CLIP?",
+  "notes_slide1": "Radford and colleagues at OpenAI ask whether the success of pre-training on web text in language processing can be repeated in computer vision. Standard vision models learn to predict a fixed set of categories, which limits them to the concepts in their labels. Natural language is a far broader source of supervision, and it is plentiful online. The authors built a data set called WIT, for WebImageText: 400 million image and text pairs found with 500,000 search queries, with up to 20,000 pairs per query. They first tried to predict the exact words of each caption, but this scaled poorly: a transformer language model learned three times slower than a model predicting a bag of words. Switching to a contrastive objective improved efficiency another four times. In CLIP, a batch holds N image and text pairs. An image encoder and a text encoder produce embeddings, and training raises the cosine similarity of the N true pairs while lowering it for the N² − N wrong ones. The result is one embedding space for images and text.",
+  "notes_slide2": "After training, CLIP can classify images with no extra training. The class names of a data set are written as text, for example in a prompt such as a photo of a dog, and embedded with the text encoder. An image is assigned to the class whose text embedding is closest. On ImageNet, zero-shot CLIP reached 76.2% accuracy, matching the original ResNet-50, which was trained on 1.28 million labelled images. Across 27 data sets, it beat a fully supervised linear classifier on ResNet-50 features on 16. It was weak on specialised or abstract tasks, such as satellite images, counting objects and handwritten digits. The limitations section estimates that about 1000 times more compute would be needed to reach the state of the art on all tasks. The broader impacts section shows that the labels a user chooses change both accuracy and bias: offensive labels were given to images of young people 32.3% of the time, but 8.7% once the class child was added. For a vector database, CLIP lets images and text share one collection."
+ }
+]

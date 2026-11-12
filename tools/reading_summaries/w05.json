@@ -1,0 +1,142 @@
+[
+ {
+  "label": "Ceri et al. 1982",
+  "kind": "Required",
+  "course_key": "Ceri, Negri & Pelagatti 1982, Horizontal Data Partitioning in Database Design (SIGMOD)",
+  "short_title": "Fragments Come From the Applications' Predicates",
+  "citation": "Ceri, S., Negri, M., & Pelagatti, G. (1982). Horizontal data partitioning in database design. In Proceedings of the 1982 ACM SIGMOD International Conference on Management of Data (SIGMOD '82) (pp. 128–136). ACM. https://doi.org/10.1145/582353.582376",
+  "problem": "A relation used by applications at several sites can be split into groups of rows. The authors ask how to choose these groups so that each application reads the rows it needs and few others.",
+  "key_ideas": [
+   "Simple predicates come from the applications, e.g. one attribute compared with a value",
+   "A minterm joins all simple predicates, each as-is or negated; each minterm defines a fragment",
+   "Derived partitioning splits a relation by the fragments of a related relation it is joined with"
+  ],
+  "key_term": {
+   "term": "Complete predicate set",
+   "definition": "Any two rows in the same fragment are accessed with equal probability by every application"
+  },
+  "slide2_title": "Complete and Minimal Predicates Give Good Fragments",
+  "findings": [
+   "With a complete set, no application reads only part of a fragment, so its access cost is predictable",
+   "Minimality drops predicates that split rows which no application treats differently",
+   "The same method fits data across sites, across primary and secondary memory, or across devices"
+  ],
+  "course_link": "Lesson 5-2 uses its terms: simple predicates, minterms, completeness and minimality. In Practice 5 Part A you derive the six PROJ minterms and build them as partitions.",
+  "limitation": "Assumes the designer knows every important application in advance. It gives no way to measure access frequencies or to adapt when use changes.",
+  "note_question": "Why do Ceri et al. require that rows in one fragment are accessed uniformly? What goes wrong when a predicate set is not complete?",
+  "notes_slide1": "Ceri, Negri and Pelagatti worked at the Politecnico di Milano; Ceri and Pelagatti later wrote one of the first textbooks on distributed databases. This short SIGMOD paper treats horizontal partitioning as a design decision driven by the applications. Its main measure is the number of accesses that application programs make to different portions of the data. The designer starts by listing the important applications and the conditions they place on a relation, for example on a project's location or budget. Each such condition is a simple predicate. Predicates used one by one do not give good fragments, because the fragments of different predicates overlap. The paper therefore combines all simple predicates into minterm predicates: conjunctions in which each simple predicate appears either as it is or negated. With n predicates there are 2ⁿ possible minterms, and each row satisfies exactly one of them. Minterms that contradict the meaning of the data, such as a project in two cities at once, are removed. Each remaining minterm defines one fragment.",
+  "notes_slide2": "The paper then asks which predicates belong in the set. A set is complete when any two rows in the same fragment have the same probability of being accessed by every application. If a set is not complete, some application reads only part of a fragment, and the designer cannot estimate its cost well. A set is minimal when every predicate is relevant: it splits a fragment into parts that at least one application accesses differently. A predicate that no application treats differently only creates more fragments to manage. The five-step algorithm of Lesson 5-2 is built on these two properties. The paper also describes derived partitioning: a relation that is joined with an already partitioned relation is split in the same way, so that matching rows end up together. This is the subject of Lesson 5-3. Finally, the authors note that the method is not only for distributed databases. The same reasoning applies when data is divided between primary and secondary memory, or across several storage devices. Compare the paper's definitions with the Key Terms slides as you read."
+ },
+ {
+  "label": "Curino et al. 2010",
+  "kind": "Required",
+  "course_key": "Curino et al. 2010, Schism (PVLDB 3(1))",
+  "short_title": "Partition the Graph of Real Transactions",
+  "citation": "Curino, C., Jones, E., Zhang, Y., & Madden, S. (2010). Schism: A workload-driven approach to database replication and partitioning. Proceedings of the VLDB Endowment, 3(1–2), 48–57. https://doi.org/10.14778/1920841.1920853",
+  "problem": "In an OLTP database on many machines, transactions that touch several partitions are slow. Hash and range partitioning often cannot avoid them, above all with n-to-n relations. Schism learns a better partitioning from the workload.",
+  "key_ideas": [
+   "Graph: one node per tuple; an edge joins two tuples used by the same transaction",
+   "METIS cuts the graph into k balanced parts with the least total weight of cut edges",
+   "A rarely updated tuple can be replicated: its node becomes a star of replica nodes"
+  ],
+  "key_term": {
+   "term": "Distributed transaction",
+   "definition": "A transaction that accesses more than one partition, so it needs two-phase commit and extra messages"
+  },
+  "slide2_title": "Fewer Distributed Transactions, Explained by Predicates",
+  "findings": [
+   "In a MySQL test, distributed transactions had about half the throughput and double the latency",
+   "A decision tree turns per-tuple labels into range predicates, e.g. TPC-C split by warehouse id",
+   "On Epinions.com, 2 partitions: 4.5% distributed transactions, against 6% for a manual design"
+  ],
+  "course_link": "Lesson 5-1's slide The Price of Fragmentation is Schism's measure: transactions that span sites. Its decision-tree rules are predicates, like the minterms of Practice 5 Part A.",
+  "limitation": "Needs a representative trace and a fixed number of partitions. Large graphs need sampling, and a changing workload means partitioning again.",
+  "note_question": "Schism ends with range predicates, as Ceri et al. do. Why does it need this step if the graph partition already places every tuple?",
+  "notes_slide1": "Schism was built at MIT by Curino, Jones, Zhang and Madden. Section 3 shows why partitioning matters for OLTP. In a MySQL test with two-row transactions on up to five servers, transactions that used two-phase commit across servers reached about half the throughput of single-server ones, and their latency almost doubled: 3.5 ms against 6.7 ms on five servers. The input to Schism is a database, a workload trace and the number of partitions k. Section 2 lists five steps: pre-process the trace into read and write sets, build the graph, partition it, explain the result, and validate. In the graph each tuple is a node, and an edge links two tuples accessed by the same transaction; its weight counts such transactions. Node weights are tuple size or access count, to balance data or load. To model replication, a tuple used by n transactions becomes a star of n + 1 nodes, and each replica edge costs the number of updates. METIS then finds a balanced minimum cut. Cutting a transaction edge costs a distributed transaction; cutting a replica edge costs a distributed update.",
+  "notes_slide2": "The graph partition gives a label to every single tuple. It can be stored in a lookup table, which a router uses to send each query to the right node. For very large or insert-heavy databases this is impractical, so section 4.3 adds an explanation phase. The trace shows which attributes appear often in WHERE clauses. A decision tree, J48 from the Weka library, learns rules on these attributes that predict each tuple's partition. For TPC-C the result was to partition by warehouse id and replicate the item table, the same design human experts use. In the final validation, Schism compares the lookup table, the range predicates, hash partitioning and full replication by the number of distributed transactions, and prefers the simplest of the best. Section 6 reports nine experiments. On TPC-C with 50 warehouses, over 25 million tuples, a sample of 1% of the tuples was enough. On Epinions.com, a social website with n-to-n relations, Schism beat a manual design that two Master's students made over several hours."
+ },
+ {
+  "label": "Pavlo et al. 2012",
+  "kind": "Optional",
+  "course_key": "Pavlo, Curino & Zdonik 2012, Skew-Aware Automatic Database Partitioning (SIGMOD)",
+  "short_title": "Search Many Designs With a Skew-Aware Cost Model",
+  "citation": "Pavlo, A., Curino, C., & Zdonik, S. (2012). Skew-aware automatic database partitioning in shared-nothing, parallel OLTP systems. In Proceedings of the 2012 ACM SIGMOD International Conference on Management of Data (SIGMOD '12) (pp. 61–72). ACM. https://doi.org/10.1145/2213836.2213844",
+  "problem": "Parallel OLTP systems scale only if most transactions use one partition and the load is even. Real applications add stored procedures, complex schemas and load that shifts over time. Can a tool find a good design?",
+  "key_ideas": [
+   "For each table: partition it on a column or replicate it; secondary indexes can be replicated",
+   "Each stored procedure gets a routing parameter, so it starts where most of its data is",
+   "Large-neighbourhood search: reset part of the best design, then search locally for a cheaper one"
+  ],
+  "key_term": {
+   "term": "Temporal skew",
+   "definition": "Load that looks even over a whole day but is concentrated on a few partitions at any one moment"
+  },
+  "slide2_title": "Distribution and Skew Must Be Weighed Together",
+  "findings": [
+   "In H-Store, only 10% distributed transactions cut throughput by about 2× at 64 partitions",
+   "Sending just 5% extra load to one partition reduced throughput by more than 3× in their test",
+   "Horticulture's designs ran 1.3–4.3× faster than Schism's and 1.1–16.3× faster than a baseline"
+  ],
+  "course_link": "Lesson 5-2 notes that the optimal design is too hard to find, so tools use heuristics; this is one. In Practice 5 Part C you choose ASG's owner by hand.",
+  "limitation": "Built and tested only on H-Store, a main-memory system driven by stored procedures. It assumes the sample trace is representative.",
+  "note_question": "Putting every row on one node gives no distributed transactions. Why is that still a bad design, and how does the cost model avoid it?",
+  "notes_slide1": "Pavlo, Curino and Zdonik built Horticulture, a design tool for parallel OLTP systems, and tested it with H-Store, a main-memory database that runs transactions as stored procedures. Section 2 measures two problems. First, distributed transactions: with only 10% of them, throughput fell by about half at 64 partitions, because nodes wait for two-phase commit messages. Second, temporal skew: a design can look balanced over a whole day yet overload one partition at a time. The authors give Wikipedia as an example: it is partitioned by language, and the servers for one language are almost idle when it is night where that language is spoken. The tool takes the schema, the stored procedures and a sample trace. For each table it decides whether to partition it horizontally on a column or to replicate it on every partition. It can also replicate a secondary index on a few columns. For each procedure it chooses a routing parameter. Replication suits read-only or read-mostly tables, because every update to a replicated table must reach all partitions.",
+  "notes_slide2": "The number of possible designs is huge: the authors count more than 10⁶⁶ for TPC-C and 10⁹⁴ for TPC-E. A greedy method got stuck in local minima, so they use large-neighbourhood search. It starts from a design built from the most frequently accessed columns. It then repeatedly relaxes, or resets, part of the best design and searches locally for a cheaper one, until a time limit. Each design is scored by a cost model, not by running it. The model combines a coordination cost, based on how many transactions are distributed and how many partitions they touch, with a skew factor computed per time interval, so that both overloaded and idle partitions are penalised. Without the skew term, the tool would prefer to put the data on as few partitions as possible. Section 7 uses five benchmarks, TATP, TPC-C (standard and skewed), TPC-E, SEATS and AuctionMark, on Amazon EC2 nodes. Horticulture's designs gave 1.3 to 4.3 times the throughput of Schism and 1.1 to 16.3 times that of a simple baseline."
+ },
+ {
+  "label": "Cubukcu et al. 2021",
+  "kind": "Optional",
+  "course_key": "Cubukcu et al. 2021, Citus: Distributed PostgreSQL (SIGMOD)",
+  "short_title": "Co-Located Shards Make Distributed Joins Local",
+  "citation": "Cubukcu, U., Erdogan, O., Pathak, S., Sannakkayala, S., & Slot, M. (2021). Citus: Distributed PostgreSQL for data-intensive applications. In Proceedings of the 2021 International Conference on Management of Data (SIGMOD '21) (pp. 2490–2502). ACM. https://doi.org/10.1145/3448016.3457551",
+  "problem": "Many PostgreSQL applications outgrow a single server, and moving them to a new distributed database is costly. The authors describe how Citus scales PostgreSQL across many servers while keeping its features.",
+  "key_ideas": [
+   "Citus is a PostgreSQL extension: a coordinator plans queries, and workers store the shards",
+   "A distributed table is split into hash shards on a distribution column chosen by the user",
+   "Reference tables are small tables copied in full to every worker"
+  ],
+  "key_term": {
+   "term": "Co-location",
+   "definition": "Storing the shards of several tables that cover the same distribution values on the same worker"
+  },
+  "slide2_title": "Four Workload Patterns Benefit From Scaling Out",
+  "findings": [
+   "Four patterns: multi-tenant, real-time analytics, high-performance CRUD and data warehousing",
+   "Joins and foreign keys between co-located tables run on each worker without moving data",
+   "Transactions across workers use two-phase commit, with distributed deadlock detection"
+  ],
+  "course_link": "Lesson 5-3's partition-wise join slide is co-location inside one server. In Practice 5 Part B, emp_low joins only pay_low; in Citus each worker would run one such join.",
+  "limitation": "Written by the developers about their own product, with their own benchmarks. Choosing a good distribution column is left to the user.",
+  "note_question": "An app's tables are distributed by tenant id. Which tables would you co-locate with them, and which would you make reference tables?",
+  "notes_slide1": "Citus began as a start-up product and is now developed at Microsoft; the five authors are its developers. The paper explains why Citus is built as an extension of PostgreSQL, not as a fork or a new system. PostgreSQL offers extension interfaces, such as planner and executor hooks and user-defined functions. Citus uses them to change how queries are planned and run, while users keep PostgreSQL's SQL, data types and tools. A Citus cluster has a coordinator node, which holds the metadata about distributed tables, and several worker nodes, which store the data. When users distribute a table, they name its distribution column. Citus hashes the value of that column to assign each row to a shard, and each shard is an ordinary PostgreSQL table on a worker. In the terms of the lessons, a shard is a horizontal fragment, and the distribution column is the attribute of the fragmenting predicates. Small tables that many queries join with, such as a list of countries, can be declared reference tables and copied to every worker.",
+  "notes_slide2": "The central idea for this week is co-location. When two tables are distributed on columns of the same type with the same number of shards, Citus keeps the shards that cover the same hash range on the same worker. Rows with equal values of the distribution column therefore sit together. A join on that column, or a foreign key between the tables, can be handled on each worker without moving data. This is derived fragmentation from Lesson 5-3: the member follows its owner. Reference tables play the role of replicated fragments, so a join with them is always local. The paper groups the applications that benefit from Citus into four workload patterns: multi-tenant software as a service, real-time analytics, high-performance CRUD and data warehousing. Each pattern needs different features, for example routing a query to one shard for a single tenant, or running an aggregation in parallel on all shards. For transactions across workers, Citus uses two-phase commit and detects distributed deadlocks. The paper ends with benchmarks and an analytics deployment inside Microsoft."
+ },
+ {
+  "label": "Özsu & Valduriez 2020",
+  "kind": "Optional",
+  "course_key": "Özsu & Valduriez 2020, Principles of Distributed Database Systems, ch. 2",
+  "short_title": "Design Is Fragmentation Followed by Allocation",
+  "citation": "Özsu, M. T., & Valduriez, P. (2020). Distributed and parallel database design. In Principles of distributed database systems (4th ed., pp. 33–89). Springer. https://doi.org/10.1007/978-3-030-26253-2_2",
+  "problem": "A distributed database must decide what to store at each site. Chapter 2 of the standard textbook gives the methods: how to fragment relations, how to check the fragments, and where to place them.",
+  "key_ideas": [
+   "Horizontal fragments come from minterms of simple predicates; derived ones use semi-joins",
+   "Vertical fragments come from attribute affinity, clustered by the bond energy algorithm",
+   "Every fragmentation must be complete, reconstructible and disjoint"
+  ],
+  "key_term": {
+   "term": "Minterm predicate",
+   "definition": "A conjunction of all simple predicates, each as it is or negated; n predicates give 2ⁿ minterms"
+  },
+  "slide2_title": "From Classic Fragmentation to Workload-Aware Design",
+  "findings": [
+   "Allocation places fragments at sites to lower total cost; the optimal allocation is NP-hard",
+   "Parallel systems often use simpler round-robin, hash or range partitioning instead",
+   "Workload-aware methods, such as Schism, and adaptive methods follow how the data is used"
+  ],
+  "course_link": "The reference for Lessons 5-1 to 5-3: the three rules, the minterm algorithm and semi-join derivation. Practice 5 uses its EMP, PAY, PROJ and ASG example schema.",
+  "limitation": "A textbook chapter: it explains each method with small examples but gives little evidence of how well the methods work on large, real workloads.",
+  "note_question": "The chapter treats fragmentation and allocation as separate steps. When could doing them one after the other give a poor design?",
+  "notes_slide1": "Özsu and Valduriez's textbook has been a standard reference on distributed databases since its first edition in 1991; the fourth edition appeared in 2020. Chapter 2 covers distributed and parallel database design. It starts from the two design questions of Lesson 5-1: how to fragment the data and how to allocate the fragments to sites. It explains why fragments, not whole relations, are the unit of distribution, and states three correctness rules: completeness, reconstruction and disjointness. For horizontal fragmentation it defines simple predicates and minterm predicates, in which every simple predicate appears either as it is or negated, so n predicates give 2ⁿ minterms. It explains completeness and minimality of a predicate set, gives an algorithm that builds such a set, and removes minterms that contradict known implications. Derived horizontal fragmentation is defined with the semi-join along the links of a join graph, from owner to member, with guidance for a member that has two owners. The running example is the EMP, PAY, PROJ and ASG schema used in the lessons.",
+  "notes_slide2": "The chapter continues with vertical fragmentation, the topic of Week 6. It builds an attribute usage matrix from the queries and their access frequencies, derives the attribute affinity matrix, and reorders it with the bond energy algorithm. A split objective then chooses where to cut the ordered attributes. Hybrid fragmentation combines horizontal and vertical cuts. The allocation section models the cost of storing and accessing each fragment at each site. Finding the optimal allocation is NP-hard, so heuristics are used. The fourth edition then widens the view. It discusses the simple partitioning used in parallel systems: round-robin, hash and range. It presents workload-aware methods that partition data using a graph built from the workload, such as Schism from this week's reading, and adaptive methods that change the partitioning while the system runs. A final section covers the data directory, which records where each fragment is stored. Use the chapter whenever a definition in the lessons seems unclear, and compare its notation with the Key Terms slides."
+ }
+]

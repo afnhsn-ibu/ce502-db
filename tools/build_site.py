@@ -379,11 +379,19 @@ def paper_li(key):
 
 
 def guide_html(w):
-    if not (released(w) and w.get("reading_guide")):
-        return ""
-    return (f'<p class="plinks" style="font-size:16px;margin-top:10px">'
-            f'<b>Reading guide:</b> what to read in each paper, what to skip and the '
-            f'questions to answer · <a href="{gh("kit/" + w["reading_guide"])}">Open the guide</a></p>')
+    out = ""
+    if released(w) and w.get("deck") and (
+            ROOT / "tools" / "reading_summaries" / f"w{w['num']:02d}.json").exists():
+        out += (f'<p class="plinks" style="font-size:16px;margin-top:10px">'
+                f'<b>Reading summaries:</b> two slides per paper, in the <i>Papers to Read</i> '
+                f"section at the end of this week's slides · "
+                f'<a href="{deck(w, "pdf")}">View (PDF)</a> · '
+                f'<a href="{deck(w, "pptx")}" download>PowerPoint with notes</a></p>')
+    if released(w) and w.get("reading_guide"):
+        out += (f'<p class="plinks" style="font-size:16px;margin-top:6px">'
+                f'<b>Reading guide:</b> what to read in each paper, what to skip and the '
+                f'questions to answer · <a href="{gh("kit/" + w["reading_guide"])}">Open the guide</a></p>')
+    return out
 
 
 def page_readings(single):

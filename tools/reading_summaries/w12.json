@@ -1,0 +1,170 @@
+[
+ {
+  "label": "Lewis et al. 2020",
+  "kind": "Required",
+  "course_key": "Lewis et al. 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (NeurIPS)",
+  "short_title": "A Generator That Reads From a Searchable Index",
+  "citation": "Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., et al. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. In Advances in Neural Information Processing Systems 33 (pp. 9459–9474).",
+  "problem": "Pre-trained language models store facts in their weights. They cannot easily update those facts, show where an answer came from, or avoid invented answers. Lewis et al. give a text generator a separate, searchable memory.",
+  "key_ideas": [
+   "Parametric memory: the BART generator; non-parametric memory: an index of 21M Wikipedia passages",
+   "A DPR retriever finds the top-K passages by inner product search; the generator reads them",
+   "RAG-Sequence uses the same passages for the whole answer; RAG-Token can switch for each token"
+  ],
+  "key_term": {
+   "term": "Non-parametric memory",
+   "definition": "Knowledge kept outside the model's weights: here a text index that the model searches and people can edit"
+  },
+  "slide2_title": "Swap the Index to Update What the Model Knows",
+  "findings": [
+   "Set new best results on the open-domain QA sets Natural Questions, WebQuestions and CuratedTrec",
+   "Raters found RAG more factual than BART in 42.7% of Jeopardy question pairs, BART in only 7.1%",
+   "A 2016 index answered 70% of questions on 2016 world leaders; mismatched index and year gave 4–12%"
+  ],
+  "course_link": "Lesson 12-1's slide 'The RAG Pipeline Has Two Halves' starts here. Practice 12 Step 1 runs the same idea: chunk, embed, store in Chroma, retrieve 3 chunks, then answer.",
+  "limitation": "Built before chat LLMs: it fine-tunes a 400M-parameter BART together with the retriever. Today's RAG usually prompts a frozen LLM instead.",
+  "note_question": "Name RAG's two kinds of memory. Which one would you change to add new course rules to your project, and why is no retraining needed?",
+  "notes_slide1": "Section 1 starts from the limits of large pre-trained models. They hold much knowledge in their parameters, but they cannot easily revise it, cannot show why they gave an answer, and sometimes produce hallucinations. Earlier hybrid models, REALM and ORQA, added a retriever, but only to extract answer spans from text. Lewis et al. apply the idea to sequence-to-sequence generation and name it retrieval-augmented generation. Section 2 describes the two parts. The retriever is DPR: one BERT encoder turns each passage into a vector, another encodes the question, and the top K passages are those with the largest inner product. The generator is BART-large, with 400 million parameters; it reads the question joined to each retrieved passage. The retrieved passage is treated as a hidden variable, and the model combines the answers from the K passages. RAG-Sequence uses one passage for a whole answer, while RAG-Token can use a different passage for each token. In training, only the question encoder and BART change; the passage encoder and the index stay fixed.",
+  "notes_slide2": "The index is the December 2018 English Wikipedia, cut into 100-word passages, 21 million in total, and searched with FAISS using an HNSW index. On four open-domain question answering datasets, RAG matched or set the best published results, without the re-ranker and extractive reader that DPR's own system used. Because it generates rather than extracts, it gave a correct answer for 11.8% of Natural Questions cases where no retrieved passage contained the answer. For Jeopardy question generation, human raters compared 452 pairs and judged RAG more factual and more specific than BART. On the FEVER fact-checking task, it came within 4.3% of complex pipeline systems. An ablation replaced the dense retriever with BM25 keyword search: BM25 was best for FEVER, whose claims centre on named entities, but worse on the other tasks. The most important test for databases is index hot-swapping: with a 2016 index RAG answered questions about 2016 world leaders, and with a 2018 index about 2018 leaders. Its knowledge changed with the index alone."
+ },
+ {
+  "label": "Karpukhin et al. 2020",
+  "kind": "Required",
+  "course_key": "Karpukhin et al. 2020, Dense Passage Retrieval (EMNLP)",
+  "short_title": "Learned Dense Vectors Beat BM25 at Finding Passages",
+  "citation": "Karpukhin, V., Oğuz, B., Min, S., Lewis, P., et al. (2020). Dense passage retrieval for open-domain question answering. In Proceedings of EMNLP 2020 (pp. 6769–6781). https://doi.org/10.18653/v1/2020.emnlp-main.550",
+  "problem": "Open-domain question answering first retrieves passages, then reads them. Retrieval used keyword methods such as BM25; dense retrieval seemed to need costly extra pre-training. Can question–passage pairs alone train a better retriever?",
+  "key_ideas": [
+   "Two BERT encoders map questions and passages to 768-d vectors; similarity is their dot product",
+   "Passage vectors are computed once and indexed with FAISS; a question needs one encoding and a search",
+   "In-batch negatives: the correct passages of the other questions in a batch serve as wrong answers"
+  ],
+  "key_term": {
+   "term": "Dual encoder",
+   "definition": "Two separate encoders, one for questions and one for passages, whose output vectors are compared by dot product"
+  },
+  "slide2_title": "Top-20 Accuracy on Natural Questions: 78.4% vs 59.1%",
+  "findings": [
+   "Beat BM25 on four of five datasets by 9–19 points of top-20 accuracy; BM25 won only on SQuAD",
+   "Trained on only 1,000 question–passage pairs, DPR already beat BM25 on Natural Questions",
+   "Search ran at 995 questions/s, but embedding and indexing 21M passages took over 17 hours"
+  ],
+  "course_link": "Lesson 12-1's 'same model' rule and its hybrid search build on this paper. In Practice 12 Step 2 you measure recall@k and MRR, much as DPR measures top-k accuracy.",
+  "limitation": "Covers short factoid questions on English Wikipedia only. Dense vectors can miss rare exact terms, such as names or codes, that keywords match.",
+  "note_question": "Why can DPR find a passage that BM25 misses? Give one question from your project where keyword search might still win.",
+  "notes_slide1": "Section 1 explains why retrieval matters. A question answering system first selects a few passages and then a reader extracts the answer; with poor retrieval, accuracy drops sharply. Keyword methods such as TF-IDF and BM25 match exact words through an inverted index. A dense vector can instead match meaning: the paper's example question asks about the bad guy in a film, and the answer passage says villain. Earlier dense retrievers, such as ORQA, needed an expensive extra pre-training step. Karpukhin et al. ask whether ordinary question–passage pairs are enough. Section 2 defines the task: split all documents into equal passages and return the k most relevant, with k usually from 20 to 100; quality is top-k retrieval accuracy. Section 3 describes DPR. A passage encoder and a question encoder, both BERT-base, produce 768-dimensional vectors, and similarity is the dot product, chosen because passage vectors can be computed in advance. Training pushes each question towards its correct passage and away from negatives. The best setup used in-batch negatives plus one hard negative found by BM25.",
+  "notes_slide2": "Section 4 sets up the experiments. The corpus is English Wikipedia from 20 December 2018, cut into 100-word passages with the article title in front: 21,015,324 passages. Five datasets are used: Natural Questions, TriviaQA, WebQuestions, CuratedTREC and SQuAD. Section 5 reports the results. DPR beat BM25 on every dataset except SQuAD. The authors explain that SQuAD's annotators wrote questions while looking at the passage, which gives keywords an advantage, and that it covers only about 500 articles. A weighted combination of BM25 and DPR scores improved results in some cases. More training data helped, but 1,000 examples were already enough to beat BM25. Each in-batch negative gave B squared question–passage pairs per batch at little extra cost. With an HNSW index in FAISS, DPR served 995 questions per second, against 23.7 per CPU thread for Lucene BM25; however, building the dense index took hours rather than 30 minutes. Section 6 shows better retrieval gave better answers: 41.5% exact match on Natural Questions, against 33.3% for ORQA. RAG later reused this retriever."
+ },
+ {
+  "label": "Koren et al. 2009",
+  "kind": "Required",
+  "course_key": "Koren, Bell & Volinsky 2009, Matrix Factorization Techniques for Recommender Systems (IEEE Computer 42(8))",
+  "short_title": "Users and Items as Vectors Learned From Ratings",
+  "citation": "Koren, Y., Bell, R., & Volinsky, C. (2009). Matrix factorization techniques for recommender systems. Computer, 42(8), 30–37. https://doi.org/10.1109/MC.2009.263",
+  "problem": "A recommender must predict what a user will like from a rating matrix in which most cells are empty. The Netflix Prize offered $1 million for cutting the error of Netflix's own system by 10%. Which method predicts missing ratings best?",
+  "key_ideas": [
+   "Map users and items to vectors of f latent factors; a predicted rating is their dot product",
+   "Learn the vectors from known ratings only, with regularisation, by SGD or alternating least squares",
+   "Extend the model with user and item biases, implicit feedback, time effects and confidence weights"
+  ],
+  "key_term": {
+   "term": "Latent factor",
+   "definition": "A hidden dimension learned from ratings, such as comedy versus drama, that describes both items and users"
+  },
+  "slide2_title": "Biases, Implicit Feedback and Time Improve Accuracy",
+  "findings": [
+   "More detailed models and more factors lowered RMSE; time effects were especially important",
+   "Their team won the 2007 Progress Prize, 8.43% better than Netflix's system, and 9.46% in 2008",
+   "Most of their prize-winning predictors were factorisation models, more accurate than neighbour methods"
+  ],
+  "course_link": "Lesson 12-2's slide 'Collaborative Filtering Also Produces Vectors' uses its model, rating ≈ p_u · q_i. Practice 12 Step 4d shows its weakness: a new student has no history to learn from.",
+  "limitation": "Centres on explicit star ratings and RMSE, not on ranking a top-10 list. Like all collaborative filtering, it cannot place brand-new users or items.",
+  "note_question": "Explain the biases model with the paper's example of Joe and Titanic. Which extension would help new users in your project?",
+  "notes_slide1": "Koren, Bell and Volinsky were members of the BellKor team in the Netflix Prize; this short article appeared in August 2009. It first separates two strategies. Content filtering builds a profile of each user or item, such as a film's genre and actors, but needs information that may be hard to collect. Collaborative filtering uses only past behaviour, such as ratings or purchases. It is usually more accurate, but it suffers from the cold-start problem: it cannot handle new users or new items. Collaborative filtering itself has two families. Neighbourhood methods compare items with items, or users with users. Latent factor models describe both users and items by perhaps 20 to 100 factors inferred from the ratings. Matrix factorisation is the most successful latent factor model: each item i has a vector q_i, each user u a vector p_u, and the predicted rating is their dot product. Because most of the rating matrix is empty, the vectors are fitted only to the known ratings, with a regularisation term against overfitting. Stochastic gradient descent and alternating least squares both minimise this error.",
+  "notes_slide2": "The second half shows why the model is flexible. Much of a rating comes from biases: some users rate high, some films are rated high. The model adds the global average, an item bias and a user bias before the dot product. In the authors' example, the average is 3.7 stars, Titanic is 0.5 above it and Joe rates 0.3 below average, so the first estimate is 3.9 stars. For users with few ratings, implicit feedback, such as purchases or browsing history, and user attributes, such as age group, add more information. Biases and user factors can also change over time, while item factors stay fixed. For implicit data, confidence weights express how sure the system is, for example from how long a show was watched. The Netflix Prize data had more than 100 million ratings from about 500,000 customers on more than 17,000 films. Figure 4 shows RMSE falling as models gain biases, implicit feedback and time effects; Netflix's own system scored 0.9514, and the grand prize needed 0.8563. When the article was written, their team still led the competition."
+ },
+ {
+  "label": "Gao et al. 2023",
+  "kind": "Optional",
+  "course_key": "Gao et al. 2023, Retrieval-Augmented Generation for Large Language Models: A Survey (arXiv:2312.10997)",
+  "short_title": "RAG Has Grown From Naive to Modular",
+  "citation": "Gao, Y., Xiong, Y., Gao, X., Jia, K., Pan, J., Bi, Y., Dai, Y., Sun, J., Wang, M., & Wang, H. (2023). Retrieval-augmented generation for large language models: A survey. arXiv:2312.10997. https://doi.org/10.48550/arXiv.2312.10997",
+  "problem": "Large language models hallucinate, have outdated knowledge and cannot show their sources. RAG research grew very fast after ChatGPT, without a clear overview. This survey organises over 100 RAG studies and their evaluation.",
+  "key_ideas": [
+   "Naive RAG: index chunks in a vector database, retrieve the top K, and add them to the prompt",
+   "Advanced RAG adds pre-retrieval steps, such as query rewriting, and post-retrieval re-ranking",
+   "Modular RAG adds modules such as search, memory and routing, and flows such as iterative retrieval"
+  ],
+  "key_term": {
+   "term": "Re-ranking",
+   "definition": "Scoring retrieved chunks again with a more precise model, so the most relevant are kept and placed first"
+  },
+  "slide2_title": "Evaluate Retrieval and Generation Separately",
+  "findings": [
+   "Naive RAG fails in three places: missed retrieval, unsupported answers and badly merged context",
+   "RAG suits facts that change; fine-tuning suits style and format; combining both can work best",
+   "Key scores: context relevance, faithfulness and answer relevance; tools like RAGAS use an LLM judge"
+  ],
+  "course_link": "Lesson 12-1's pipeline is naive RAG, and 'Three Ways to Retrieve Better' is advanced RAG. Practice 12 Step 2 tunes chunk size, an indexing step the survey also discusses.",
+  "limitation": "A survey of a fast-moving field (version 5, March 2024). It lists many methods but compares few directly, and some tools it names may be outdated.",
+  "note_question": "Which weakness of naive RAG does your project show most, and which advanced RAG technique from section 2 would you test first?",
+  "notes_slide1": "Section 1 explains why RAG matters. Large language models are strong but produce hallucinations on questions outside their training data or needing current information. RAG retrieves relevant chunks from an external knowledge base by semantic similarity and gives them to the model. The authors summarise over 100 studies and cover 26 tasks and nearly 50 datasets. Section 2, the part to read, describes three stages of RAG. Naive RAG follows a retrieve-then-read process. Indexing cleans documents in formats such as PDF, HTML, Word and Markdown, splits them into chunks, embeds each chunk and stores the vectors in a vector database. Retrieval embeds the question with the same model and takes the top K most similar chunks. Generation puts the question and the chunks into a prompt for the model. The survey lists the weaknesses of this simple design: retrieval with low precision or recall, answers not supported by the context, repeated or badly combined information, and answers that only copy the retrieved text without adding synthesis.",
+  "notes_slide2": "Advanced RAG keeps the same chain but adds steps before and after retrieval. Before retrieval, it improves the index, for example with better chunk sizes, sliding windows and metadata, and improves the query by rewriting or expanding it. After retrieval, it re-ranks chunks and compresses the context, because too many documents dilute the important details. Modular RAG goes further. New modules include direct search of other sources, multi-query retrieval, memory, routing between data sources, and task adapters. New patterns include rewriting the query before retrieving, hybrid keyword and vector search, and adaptive flows in which the system decides when to retrieve again. Section 2 ends by comparing RAG with fine-tuning: RAG is like giving the model a textbook, which suits facts that change, but adds latency; fine-tuning is like the student learning the material, which suits style and format. Later sections describe each component, and section 6 lists evaluation targets and tools. Section 7 discusses open problems, such as whether long context windows make RAG unnecessary."
+ },
+ {
+  "label": "Es et al. 2024",
+  "kind": "Optional",
+  "course_key": "Es et al. 2024, RAGAs (EACL demos)",
+  "short_title": "An LLM Judge Scores RAG Without Reference Answers",
+  "citation": "Es, S., James, J., Espinosa Anke, L., & Schockaert, S. (2024). RAGAs: Automated evaluation of retrieval augmented generation. In Proceedings of EACL 2024: System Demonstrations (pp. 150–158). https://doi.org/10.18653/v1/2024.eacl-demo.16",
+  "problem": "A RAG system's quality depends on its retriever, corpus, model and prompt, so it needs tuning. Perplexity and short-answer QA scores say little, and reference answers are often missing. How can it be evaluated automatically?",
+  "key_ideas": [
+   "Faithfulness: split the answer into statements; the score is the share the context supports",
+   "Answer relevance: generate questions from the answer and compare them with the real question",
+   "Context relevance: the share of context sentences that the LLM extracts as needed for the answer"
+  ],
+  "key_term": {
+   "term": "Reference-free metric",
+   "definition": "A score that needs no human-written correct answer, only the question, the retrieved context and the answer"
+  },
+  "slide2_title": "Closer to Human Judgement Than Asking for a Score",
+  "findings": [
+   "On WikiEval, RAGAS agreed with humans 95% of the time on faithfulness and 78% on answer relevance",
+   "Asking ChatGPT for a 0–10 score agreed less: 72% on faithfulness and 52% on answer relevance",
+   "Context relevance was hardest (70%): the LLM struggled to pick key sentences in long contexts"
+  ],
+  "course_link": "Its faithfulness and answer relevance are the last two rows of Lesson 12-1's 'Measuring a RAG System'. Practice 12 Step 1 asks which metric would catch a wrong answer from the right chunk.",
+  "limitation": "Validated on only 50 Wikipedia pages with one judge model, gpt-3.5-turbo-16k. Scores depend on that model and its prompts, and can vary between runs.",
+  "note_question": "Your RAG answer scores high on faithfulness but low on answer relevance. What went wrong, and how would you check by hand?",
+  "notes_slide1": "This short demonstration paper presents RAGAS, an open-source Python library. Section 1 explains why RAG needs automatic evaluation. Its quality depends on the retriever, the corpus, the language model and the prompt, so developers change and test it often. Measuring perplexity is not always predictive and needs model probabilities, which closed models such as ChatGPT do not provide. Question answering datasets usually have short extracted answers, which do not match real use. RAGAS therefore aims for reference-free metrics. Section 3 defines three of them, each computed by prompting an LLM. Faithfulness asks whether the answer's claims can be inferred from the retrieved context: the LLM splits the answer into short statements, checks each one against the context, and the score is the share supported. Answer relevance asks whether the answer addresses the question: the LLM writes possible questions for the answer, and the score is their average cosine similarity to the real question. Context relevance asks whether the context is focused: the score is the share of its sentences needed to answer.",
+  "notes_slide2": "Section 4 tests whether these metrics agree with people. Because no suitable dataset existed, the authors built WikiEval from 50 Wikipedia pages about events since the start of 2022, after the judge model's training cutoff. ChatGPT wrote one question and one answer per page. For each quality dimension, two annotators compared a good and a weaker answer or context, and agreed in about 95% of cases for faithfulness and context relevance and about 90% for answer relevance. RAGAS was then asked which of the two it preferred. It matched the humans in 95% of faithfulness pairs, 78% of answer relevance pairs and 70% of context relevance pairs. Two simpler baselines did worse: asking ChatGPT for a score from 0 to 10, or asking it to rank the two candidates. The authors note that context relevance was hardest, especially with long contexts. Section 5 shows the library works with LlamaIndex and LangChain, and that asking for JSON output made scores more consistent between runs. The authors also warn that relying on an LLM judge has known limits."
+ },
+ {
+  "label": "Covington et al. 2016",
+  "kind": "Optional",
+  "course_key": "Covington, Adams & Sargin 2016, Deep Neural Networks for YouTube Recommendations (RecSys)",
+  "short_title": "Two Networks: Candidate Generation, Then Ranking",
+  "citation": "Covington, P., Adams, J., & Sargin, E. (2016). Deep neural networks for YouTube recommendations. In Proceedings of the 10th ACM Conference on Recommender Systems (RecSys '16) (pp. 191–198). ACM. https://doi.org/10.1145/2959100.2959190",
+  "problem": "YouTube must recommend videos from a corpus of millions to more than a billion users, within tens of milliseconds. New videos arrive constantly and feedback is noisy and implicit. How can deep learning work at this scale?",
+  "key_ideas": [
+   "Candidate generation narrows millions of videos to hundreds; ranking scores them with rich features",
+   "A user vector from averaged watch and search embeddings finds candidates by nearest-neighbour search",
+   "Ranking predicts expected watch time with weighted logistic regression, not click probability"
+  ],
+  "key_term": {
+   "term": "Candidate generation",
+   "definition": "The first stage that cheaply selects a few hundred relevant items from the whole catalogue"
+  },
+  "slide2_title": "Choose the Training Problem as Carefully as the Model",
+  "findings": [
+   "Using a training example's age as a feature removed the bias to old videos and raised watch time on new ones",
+   "Predicting a user's next watch, not a random held-out watch, worked better in live A/B tests",
+   "Weighting clicks by watch time mattered: equal weights raised the watch-time-weighted loss by 4.1%"
+  ],
+  "course_link": "Lesson 12-2's slide 'How Large Recommenders Are Built: Two Stages' follows this paper. Practice 12 Step 4b's profile, the mean of liked courses' vectors, echoes its averaged watch vectors.",
+  "limitation": "An industry report on private data: it gives few absolute numbers and cannot be reproduced. It assumes Google-scale data and infrastructure.",
+  "note_question": "Which stage of the YouTube design would a vector database serve, and why can the ranking stage afford a slower model?",
+  "notes_slide1": "Section 1 names three challenges: scale, with more than a billion users; freshness, because many hours of video are uploaded every second; and noise, because the system rarely knows whether users were satisfied and must learn from implicit signals such as watches. The models have about one billion parameters and train on hundreds of billions of examples. Section 2 presents the two-stage funnel. Candidate generation takes the user's activity history and retrieves a few hundred videos from millions. Ranking then scores those few hundred with many more features, and the highest scores are shown. Section 3 treats candidate generation as a classification problem over millions of videos. Each video ID and search token has an embedding. A user's last 50 watches and last 50 searches are averaged, combined with features such as region, device, age and gender, and passed through layers of ReLU units to produce a user vector. At serving time, the top videos are found by nearest-neighbour search in dot-product space. The authors call this a nonlinear generalisation of matrix factorisation, which the previous YouTube system used.",
+  "notes_slide2": "Much of section 3 is about choosing what to predict. Training examples come from all YouTube watches, not only from recommended ones, so that new content can surface. Each user contributes a fixed number of examples, so very active users do not dominate. The model predicts the user's next watch from earlier actions only; predicting a random held-out watch leaks future information. Search queries are given as an unordered bag of words, so the model does not simply repeat the last search page. Adding the age of each training example lets the model learn that new videos are popular, which increased watch time on recent uploads. Deeper networks, up to four layers, improved offline precision. Section 4 describes ranking. It uses hundreds of features; the most important describe the user's past interaction with the video's channel or topic. Clicked impressions are weighted by watch time in a logistic regression, so the model predicts expected watch time and avoids rewarding clickbait. The best network had layers of 1024, 512 and 256 units within the CPU budget. Final decisions rely on live A/B tests."
+ }
+]

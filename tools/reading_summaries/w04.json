@@ -1,0 +1,170 @@
+[
+ {
+  "label": "Stonebraker 1986",
+  "kind": "Required",
+  "course_key": "Stonebraker 1986, The Case for Shared Nothing (IEEE Database Eng. Bull. 9(1))",
+  "short_title": "Shared Nothing Is the Most Cost-Effective Design",
+  "citation": "Stonebraker, M. (1986). The case for shared nothing. IEEE Database Engineering Bulletin, 9(1), 4–9.",
+  "problem": "In 1986, high transaction rate systems were built as shared-memory, shared-disk or shared-nothing multiprocessors. Stonebraker asks which design is best, and whether the weak points of shared nothing really matter in practice.",
+  "key_ideas": [
+   "Rates the three designs on 12 points; shared nothing is best for scaling, bandwidth and distance",
+   "Shared memory cannot scale to many processors, and shared disk is best at nothing",
+   "Shared nothing comes almost free with a distributed DBMS, which every vendor must build"
+  ],
+  "key_term": {
+   "term": "Shared nothing",
+   "definition": "Processors share neither memory nor disks; each has its own, and they cooperate only by messages"
+  },
+  "slide2_title": "Its Weak Points Matter Little in the Common Case",
+  "findings": [
+   "Database design and load balancing are harder, but automatic design tools can partition data",
+   "If most transactions stay at one site (nearly delightful data), messages are not the main cost",
+   "Hot spots hurt every design; remove them or split each into N subrecords"
+  ],
+  "course_link": "Lesson 4-1's slide 'Shared Memory, Shared Disk and Shared Nothing' builds on this paper. In Practice 4, each site owns its own data, and the global layer only sends it queries.",
+  "limitation": "A short position paper. Table 1's ratings are the author's judgment, with no measurements, and they concern transaction processing in 1986.",
+  "note_question": "Stonebraker rates shared nothing worst on database design and load balancing. How does he argue that these problems are small?",
+  "notes_slide1": "Stonebraker, at Berkeley, wrote this six-page paper for a 1986 bulletin issue on high transaction rate systems. He compares three multiprocessor designs. In shared memory, processors share one central memory. In shared disk, each processor has private memory, but all share the disks. In shared nothing, neither memory nor disks are shared. His Table 1 rates each design first, second or third on twelve points. They include the difficulty of concurrency control, crash recovery, database design and load balancing, the number of messages, bandwidth, the ability to scale, and the distance between machines. He draws three conclusions. Shared memory does not scale to a large number of processors, which he calls a fundamental flaw. Shared disk is not the best on any point. And because every vendor will need a distributed database system anyway, shared nothing needs little or no extra code. So supporters of the other designs must show a serious flaw in shared nothing before their extra complexity is justified.",
+  "notes_slide2": "The rest of the paper answers the points where shared nothing scored worst. Database design and load balancing are harder, because the location of every object must be chosen. Stonebraker expects automatic design and tuning tools to partition the data and rebalance it, and calls databases with stable access patterns tunable. On messages, he calls a database delightful if it can be partitioned so that every transaction runs at one site; in the TP1 benchmark, 85% of transactions are of this kind. If processing a command costs several times more than sending a message, local work, not the network, dominates. Hot spots, such as a branch balance or the head of the log, cause trouble in every design. He suggests removing them, splitting each into N subrecords, or using special update methods. Finally, he argues that scaling a system by a factor of ten does not make concurrency control harder for most databases. His conclusion: for scalable, tunable, nearly delightful databases, shared nothing has no real disadvantage."
+ },
+ {
+  "label": "DeWitt & Gray 1992",
+  "kind": "Required",
+  "course_key": "DeWitt & Gray 1992, Parallel Database Systems (CACM 35(6))",
+  "short_title": "Parallel Databases Won With Shared Nothing",
+  "citation": "DeWitt, D., & Gray, J. (1992). Parallel database systems: The future of high performance database systems. Communications of the ACM, 35(6), 85–98. https://doi.org/10.1145/129888.129894",
+  "problem": "In the 1980s, database machines built from special hardware failed, and critics expected I/O to limit multiprocessors. DeWitt and Gray explain why parallel database systems on ordinary hardware succeeded instead, and how they work.",
+  "key_ideas": [
+   "Linear speedup: twice the hardware does the same job in half the time",
+   "Linear scaleup: twice the hardware does twice as large a job in the same time",
+   "Relational queries form dataflow graphs, which allow pipelined and partitioned parallelism"
+  ],
+  "key_term": {
+   "term": "Partitioned parallelism",
+   "definition": "Split an operator's input over many processors and run a copy of the operator on each part at once"
+  },
+  "slide2_title": "Partition the Data So Each Node Works on Its Part",
+  "findings": [
+   "Start-up, interference and skew are the three barriers to linear speedup and scaleup",
+   "With 1% interference per added processor, speedup can never exceed 37",
+   "Round-robin suits full scans, hashing suits key lookups, ranges suit range queries but risk skew"
+  ],
+  "course_link": "Builds on Lesson 4-1's shared-nothing slide. In Practice 4, sites split customers by state, a value-based scheme close to his range partitioning; Week 5 studies partitioning.",
+  "limitation": "A 1992 survey: its systems (Teradata, Tandem, Gamma, Bubba) are now history, and its second half lists open problems rather than results.",
+  "note_question": "Define speedup and scaleup with your own example. Which partitioning would suit lookups by customer number, and why?",
+  "notes_slide1": "DeWitt, who led the Gamma project at Wisconsin, and Gray, then at Digital, begin with a reversal. In 1983, critics predicted the end of database machines, which relied on special hardware such as bubble memories. By 1992, parallel systems from Teradata and Tandem were replacing mainframes, and they were built from ordinary processors, memory and disks. One reason is the relational model: queries are uniform operators on streams of tuples, so they can be composed into dataflow graphs. Section 2 defines the goals. Speedup keeps the job fixed and adds hardware; it is linear if N times the hardware makes the job N times faster. Scaleup grows both; it is linear if an N times larger system does an N times larger job in the same time. Transaction scaleup adds clients and requests, while batch scaleup runs one larger query. Three threats prevent linearity: start-up time for many processes, interference on shared resources, and skew, where the slowest part decides the total time.",
+  "notes_slide2": "The paper uses Stonebraker's three designs. If each added processor slows the others by only 1%, the maximum speedup is 37, and a thousand processors give 4% of the effective power of one. Shared-memory and shared-disk machines suffer this interference in the interconnect, in their caches and in reservation messages. Shared nothing sends only questions and answers over the network, and in 1992 such systems already had more than 200 processors. Section 2.3 explains the dataflow approach. Pipelined parallelism is limited, because pipelines are short and sort or aggregate operators must see all their input first. Partitioned parallelism works better, and it needs partitioned data. Round-robin spreads tuples evenly and suits full scans. Hashing on an attribute sends a lookup to one disk. Range partitioning keeps similar values together and suits range queries, but risks data and execution skew. Beyond some point more partitions hurt, when start-up cost becomes a large share of a query. The later sections cover parallel operators and real systems."
+ },
+ {
+  "label": "Sheth & Larson 1990",
+  "kind": "Required",
+  "course_key": "Sheth & Larson 1990, Federated Database Systems (ACM Computing Surveys 22(3))",
+  "short_title": "Autonomy Separates Federations From Distributed DBMSs",
+  "citation": "Sheth, A. P., & Larson, J. A. (1990). Federated database systems for managing distributed, heterogeneous, and autonomous databases. ACM Computing Surveys, 22(3), 183–236. https://doi.org/10.1145/96602.96604",
+  "problem": "Organisations ran many separate databases, often on different DBMSs, and needed to share data across them without losing control. Sheth and Larson survey how to build federations of such autonomous, heterogeneous databases.",
+  "key_ideas": [
+   "Three dimensions describe a multidatabase system: distribution, heterogeneity and autonomy",
+   "Autonomy has several kinds: design, communication, execution and association",
+   "Taxonomy: non-federated or federated; a federation is loosely or tightly coupled"
+  ],
+  "key_term": {
+   "term": "Federated system",
+   "definition": "A set of cooperating component databases that stay autonomous but agree to share part of their data"
+  },
+  "slide2_title": "Who Controls the Federated Schema Decides the Type",
+  "findings": [
+   "Heterogeneity comes from different DBMSs, data models and languages, and from what data means",
+   "Tightly coupled: administrators build a federated schema; loosely coupled: users build views",
+   "Components keep control of their data, so full transparency is traded for autonomy"
+  ],
+  "course_link": "Lesson 4-2's 'Three Independent Dimensions' and 'Distributed DBMS or Multi-Database System?' use this survey. In Practice 4 Part C you rate 8 systems on A, D and H.",
+  "limitation": "Written in 1990, before the Web and cloud data services. At 54 pages it is long, and its later sections on schema translation are dated.",
+  "note_question": "Using the kinds of autonomy, explain why a federation of independent databases cannot offer full transparency.",
+  "notes_slide1": "By 1990, many organisations had several databases, built at different times by different groups, often with different DBMSs. Users wanted to combine their data, but the owners did not want to give up control. Sheth and Larson's long survey, still the standard reference, describes how to build a federated database system for this situation. Section 1 sets out three characteristics. Distribution means the data is stored at more than one site, perhaps with copies. Heterogeneity comes from differences between DBMSs, such as data models, structures, constraints and query languages, and from semantic differences in what the data means. Autonomy describes how far each component stays under separate, independent control. The authors list several kinds. Design autonomy is the freedom to choose one's own data, representation and naming. Communication autonomy is the freedom to decide whether to talk to other systems. Execution autonomy means running local operations without outside interference. Association autonomy means deciding how much data to share, and when to leave.",
+  "notes_slide2": "From these characteristics the survey builds a taxonomy. A multidatabase system supports operations on several component databases. If the components are not autonomous, the system is non-federated: one central system manages everything, as in a distributed DBMS. If they keep their autonomy, it is a federated database system. Federations differ in who creates and maintains the federated schemas. In a tightly coupled federation, federation administrators build the federated schema and control access to the components. In a loosely coupled federation, each user builds views over the data the components export, and no central schema exists. A tightly coupled federation may have one federated schema or several. Later sections, beyond the assigned reading, present a five-level schema architecture, from local and component schemas through export and federated schemas to external schemas, and a method for building a federation. The main lesson for this week is that autonomy and transparency pull in opposite directions."
+ },
+ {
+  "label": "Rothnie et al. 1980",
+  "kind": "Optional",
+  "course_key": "Rothnie et al. 1980, SDD-1 (ACM TODS 5(1))",
+  "short_title": "SDD-1: An Early Working Distributed DBMS",
+  "citation": "Rothnie, J. B., Bernstein, P. A., Fox, S., Goodman, N., Hammer, M., Landers, T. A., Reeve, C., Shipman, D. W., & Wong, E. (1980). Introduction to a system for distributed databases (SDD-1). ACM Transactions on Database Systems, 5(1), 1–17. https://doi.org/10.1145/320128.320129",
+  "problem": "In the late 1970s, data was spread over sites on a network, and no DBMS could manage it as one database. The SDD-1 team at Computer Corporation of America built one, and had to solve query processing, concurrency and failures.",
+  "key_ideas": [
+   "Relations are split into fragments, and each fragment may be stored at several sites",
+   "Three kinds of virtual machine: Transaction Modules, Data Modules and a Reliable Network",
+   "Users see one relational database; SDD-1 hides where fragments and copies are stored"
+  ],
+  "key_term": {
+   "term": "Data Module",
+   "definition": "The SDD-1 component at each site that stores fragments and carries out requests to read, move and write data"
+  },
+  "slide2_title": "Reduce Data With Semi-Joins, Then Ship It",
+  "findings": [
+   "Queries reduce relations with semi-joins before moving them to the site that finishes the work",
+   "Concurrency control uses timestamps and transaction classes analysed in advance for conflicts",
+   "The Reliable Network gives guaranteed delivery, atomic commit, site monitoring and a clock"
+  ],
+  "course_link": "Lesson 4-1's 'Problems Every Distributed DBMS Must Solve' appear here in a real system. Its query processing is what Lesson 4-3's 'Why the Semi-Join Matters: Ship Fewer Bytes' explains.",
+  "limitation": "A 1980 prototype on the slow ARPANET. Its design assumes communication cost dominates, which is less true on today's networks.",
+  "note_question": "SDD-1 assumed the network was the bottleneck. Which of its design choices would you change for a fast data-centre network?",
+  "notes_slide1": "SDD-1, a System for Distributed Databases, was built at Computer Corporation of America in the late 1970s with US defence research funding. It was one of the first working distributed database systems. This paper is an overview; companion papers describe its parts in detail. The goal was to let users at sites on the ARPANET query and update one relational database without knowing where the data was stored. Relations are divided into fragments, horizontal or vertical, and each fragment can be stored at one or more sites. The system has three kinds of virtual machine. Transaction Modules plan and control the execution of transactions. Data Modules store the data at each site and carry out requests to read, move and write it. The Reliable Network connects them. The design addresses four problems that every distributed DBMS faces: concurrency control, query processing, reliability when components fail, and management of the directory that records where the data is.",
+  "notes_slide2": "For concurrency control, SDD-1 uses timestamps rather than distributed locking. Transactions are grouped into classes defined in advance, and an analysis of conflicts between classes shows which can run with little or no synchronisation. Only conflicting classes need the stronger protocols. For query processing, network communication was the main cost. SDD-1 first applies local restrictions and projections, then uses semi-joins to reduce relations before any of them are shipped, choosing the semi-joins with a hill-climbing heuristic. The reduced relations are finally moved to one site, where the query is completed. For reliability, the Reliable Network delivers messages even when a site is down, runs a commit protocol so that a transaction's updates are applied at all sites or at none, monitors which sites are up, and keeps a global clock for timestamps. The directory is stored like ordinary data, so the same mechanisms protect it. Many problems on Lesson 4-1's problem-map slide were solved here for the first time in a working system."
+ },
+ {
+  "label": "Bernstein & Chiu 1981",
+  "kind": "Optional",
+  "course_key": "Bernstein & Chiu 1981, Using Semi-Joins to Solve Relational Queries (JACM 28(1))",
+  "short_title": "Semi-Joins Fully Reduce Only Tree Queries",
+  "citation": "Bernstein, P. A., & Chiu, D.-M. W. (1981). Using semi-joins to solve relational queries. Journal of the ACM, 28(1), 25–40. https://doi.org/10.1145/322234.322238",
+  "problem": "In a distributed database, joining relations at different sites means shipping data, and communication is the main cost. Semi-joins can shrink relations first. But which queries can semi-joins fully reduce, and how many are needed?",
+  "key_ideas": [
+   "A semi-join keeps the tuples of R that match some tuple of S; only S's join column is sent",
+   "A query graph has a node per relation and an edge per join clause",
+   "Full reduction removes every tuple that does not take part in the query's answer"
+  ],
+  "key_term": {
+   "term": "Semi-join",
+   "definition": "The join of R and S projected back onto R's columns: the tuples of R that match some tuple of S"
+  },
+  "slide2_title": "Cycles in the Query Graph Defeat Semi-Joins",
+  "findings": [
+   "Theorem 1: a tree query on n relations is fully reduced by a program of 2n − 2 semi-joins",
+   "Theorem 2: for cyclic queries, the semi-joins needed can grow with relation size, not query size",
+   "Theorem 3: whether a query is a tree query can be tested in linear time"
+  ],
+  "course_link": "The formal basis of Lesson 4-3's 'Why the Semi-Join Matters: Ship Fewer Bytes'. In Practice 4 Part B, pushdown ships only rows that pass a filter; a semi-join does this for join values.",
+  "limitation": "Pure theory: it counts semi-joins but not their cost, and leaves out selections, target lists and multi-column semi-joins.",
+  "note_question": "Draw the query graph of a three-table join from Practice 4. Is it a tree query, and what does that mean for a semi-join plan?",
+  "notes_slide1": "Bernstein and Chiu, at Harvard, start from the semi-join, an operator used by the query processor of SDD-1 and by the RAP database machine. The semi-join of R by S keeps only the tuples of R that match some tuple of S on the join column. It is cheap in a distributed system: to reduce R, only the projection of S on its join column must be sent to R's site. If that projection is small and removes many tuples of R, the semi-join pays for itself before the real join is done. The paper asks a precise question. For which queries can semi-joins alone reach the full reduction, in which each relation keeps only the tuples that take part in the answer? The authors study equi-join queries: conjunctions of clauses such as R1.A = R2.B. Each query has a query graph, with a node for each relation and an edge for each clause. A tree query is one whose graph is a tree, or that is equivalent to such a query. All other queries are called cyclic.",
+  "notes_slide2": "Theorem 1, the main result, says that tree queries are well behaved. For a tree query on n relations, one fixed program of 2n − 2 semi-joins fully reduces every database state: one pass from the leaves to a root, then one pass back. Any single relation can be fully reduced with n − 1 semi-joins. Theorem 2 shows that cyclic queries are badly behaved. For every cyclic query, there are database states that semi-joins cannot fully reduce, and the fewest semi-joins needed grows with the number of tuples in a relation, not with the number of relations. So semi-join strategies can be very poor for cyclic queries. Section 5 gives a linear-time test of whether a query is a tree query. The test also produces an equivalent query with a tree graph, for example by dropping a clause that follows from others by transitivity. The conclusion: for tree queries, a short semi-join strategy always reaches the full potential of semi-joins, so distributed query processors can rely on it."
+ },
+ {
+  "label": "Özsu & Valduriez 2020",
+  "kind": "Optional",
+  "course_key": "Özsu & Valduriez 2020, Principles of Distributed Database Systems, ch. 1",
+  "short_title": "A Distributed DBMS Makes Many Sites Look Like One",
+  "citation": "Özsu, M. T., & Valduriez, P. (2020). Introduction. In Principles of distributed database systems (4th ed., pp. 1–31). Springer. https://doi.org/10.1007/978-3-030-26253-2_1",
+  "problem": "Data is now spread over many computers, from company networks to clouds. Chapter 1 of the standard textbook defines a distributed database, explains what a distributed DBMS promises, and lists the problems it must solve.",
+  "key_ideas": [
+   "A distributed database is logically related data spread over sites linked by a network",
+   "Promises: transparency, reliability through distributed transactions, performance, scalability",
+   "Architectures are classified by autonomy, distribution and heterogeneity"
+  ],
+  "key_term": {
+   "term": "Distributed DBMS",
+   "definition": "The software that manages a distributed database and makes the distribution transparent to its users"
+  },
+  "slide2_title": "The Problems Behind Every Distributed Database",
+  "findings": [
+   "Design issues include data placement, query processing, concurrency control and reliability",
+   "Transparency hides where data is stored, how it is fragmented and whether it is copied",
+   "Main architectural models: client–server, peer-to-peer, multidatabase and cloud"
+  ],
+  "course_link": "Covers the whole week: Lesson 4-1's definitions and Lesson 4-2's transparency and A/D/H dimensions. Use its terms for the reflection on ddb_global in Practice 4.",
+  "limitation": "A textbook chapter, not research: it gives definitions and an overview without new results, and its examples change between editions.",
+  "note_question": "Which promises of a distributed DBMS does Practice 4's global layer keep, and which does it not keep?",
+  "notes_slide1": "Özsu and Valduriez's book has been the standard textbook on distributed databases since its first edition in 1991. The fourth edition, from 2020, rewrote the introduction for a world of web and cloud data. Chapter 1 begins with definitions. A distributed database is a collection of logically related databases spread over a computer network. A distributed DBMS is the software that manages it and makes the distribution transparent to users. The authors also stress what is not a distributed database, for example a set of unrelated files, or a system where all data is at one site and only the users are remote. The chapter then presents the promises of distributed DBMSs. Transparent management hides where data is stored, how it is fragmented and whether it is copied. Distributed transactions improve reliability, because the failure of one site need not stop the whole system. Placing data near its users and running queries in parallel improve performance. Adding sites makes it easier to scale.",
+  "notes_slide2": "Next, the chapter lists the design issues that the rest of the book covers. They include distributed database design, which means deciding how to fragment the data and where to place it; distributed query processing; distributed concurrency control; reliability and commit protocols; and replication. These problems depend on each other, so a choice in one, such as replication, affects the others. The last part of the chapter is about architecture. It starts from the ANSI/SPARC levels of a centralised DBMS, then classifies distributed systems on three dimensions: autonomy, distribution and heterogeneity. The main architectural models follow: client–server systems, peer-to-peer distributed DBMSs with a global conceptual schema, multidatabase systems built over autonomous components, and cloud data management. If your library has the third edition, its chapter 1 covers the same ground. Read this chapter last, as a summary of the week, and use its terms when you classify systems in Practice 4."
+ }
+]

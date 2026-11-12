@@ -1,0 +1,170 @@
+[
+ {
+  "label": "DeCandia et al. 2007",
+  "kind": "Required",
+  "course_key": "DeCandia et al. 2007, Dynamo (SOSP)",
+  "short_title": "Dynamo Stays Writeable by Relaxing Consistency",
+  "citation": "DeCandia, G., Hastorun, D., Jampani, M., et al. (2007). Dynamo: Amazon's highly available key-value store. In Proceedings of the 21st ACM SIGOPS Symposium on Operating Systems Principles (SOSP '07) (pp. 205–220). ACM. https://doi.org/10.1145/1294261.1294281",
+  "problem": "Amazon runs on tens of thousands of servers, and some of them are always failing. Services such as the shopping cart must accept writes even then. Relational replication usually chooses consistency and would reject them.",
+  "key_ideas": [
+   "Consistent hashing places keys on a ring; each key is stored on N successive nodes",
+   "Quorum-like reads and writes wait for R or W replies; R + W > N makes the sets overlap",
+   "Vector clocks keep conflicting versions; the application, e.g. the cart, merges them"
+  ],
+  "key_term": {
+   "term": "Sloppy quorum",
+   "definition": "Reads and writes use the first N healthy nodes; a stand-in node keeps a hint and hands the data back later"
+  },
+  "slide2_title": "Production Use Shows Eventual Consistency Works",
+  "findings": [
+   "The common setting was (N, R, W) = (3, 2, 2), chosen for latency, durability and availability",
+   "Over 24 hours, 99.94% of shopping cart requests saw exactly one version of the data",
+   "Requests succeeded without a timeout 99.9995% of the time, with no data loss reported"
+  ],
+  "course_link": "Lesson 9-3's ring and R + W > RF slides come from this paper. In Practice 9 Part B, the replication factor and the levels ONE and QUORUM are Dynamo's N, R and W.",
+  "limitation": "Built for one trusted company and single-key updates: no transactions and no security. Some figures are only aggregates, to protect Amazon's business.",
+  "note_question": "Why does Dynamo resolve conflicts when it reads, not when it writes? What does the cart merge gain, and what can go wrong?",
+  "notes_slide1": "Amazon's platform runs on tens of thousands of servers in many data centres, and at that scale some disks, servers and network links are always failing. Many services, such as shopping carts, session state and best-seller lists, only read and write by primary key. A relational database offers more than they need, and its replication usually chooses consistency over availability. Section 2 sets the requirements: get and put by key on objects usually under 1 MB, no isolation, single-key updates only, and latency measured at the 99.9th percentile, not the average. The central decision is to be always writeable: a customer must be able to add an item even during a failure, so conflicts are resolved when data is read. Section 4 describes the techniques. Keys are hashed with MD5 onto a ring. Each physical node owns several positions, called virtual nodes, which spreads the load evenly. A coordinator stores each key and copies it to the next N − 1 distinct nodes, called the preference list.",
+  "notes_slide2": "Every change creates a new, immutable version, and each version carries a vector clock, a list of (node, counter) pairs. If neither clock is greater than or equal to the other on every node, the versions conflict, and a read returns all of them for the application to merge. For the cart, the merge keeps every added item, but a deleted item can reappear. Reads and writes wait for R and W replies out of N replicas. If a node is down, a sloppy quorum writes to the next healthy node with a hint, and the data is handed back when the node recovers. Merkle trees compare replicas cheaply in the background, and a gossip protocol spreads membership. Section 6 reports results: most instances used (3, 2, 2); in 24 hours, 99.94% of cart requests saw one version; and 99.9995% of requests succeeded without a timeout. The paper shows that an eventually consistent store can run demanding production services. Cassandra later kept the ring and quorums but dropped vector clocks."
+ },
+ {
+  "label": "Chang et al. 2006",
+  "kind": "Required",
+  "course_key": "Chang et al. 2006, Bigtable (OSDI)",
+  "short_title": "Structured Data as One Sparse, Sorted Map",
+  "citation": "Chang, F., Dean, J., Ghemawat, S., Hsieh, W. C., Wallach, D. A., Burrows, M., Chandra, T., Fikes, A., & Gruber, R. E. (2006). Bigtable: A distributed storage system for structured data. In Proceedings of the 7th Symposium on Operating Systems Design and Implementation (OSDI '06) (pp. 205–218). USENIX Association.",
+  "problem": "Google stored very different data, from web pages to satellite images, for both batch jobs and live services. It needed one storage system that scales to petabytes on thousands of commodity servers.",
+  "key_ideas": [
+   "A table maps (row key, column key, timestamp) to an uninterpreted string of bytes",
+   "Rows are sorted by key and split into tablets; reads and writes on one row are atomic",
+   "Columns are grouped into families, written family:qualifier, the unit of access control"
+  ],
+  "key_term": {
+   "term": "Column family",
+   "definition": "A named group of columns, created in advance, whose data is usually of one type and stored together"
+  },
+  "slide2_title": "Writes Go to a Log and Memory, Then to Sorted Files",
+  "findings": [
+   "Each write goes to a commit log, then into a sorted in-memory buffer called the memtable",
+   "A full memtable is frozen and written to GFS as an immutable SSTable: a minor compaction",
+   "Reads merge the memtable with the SSTables; merging compactions keep the file count low"
+  ],
+  "course_link": "Lesson 9-2's wide-column model and Lesson 9-3's partition key plus sorted clustering columns come from here. In Practice 9, newest-first rows and TTL echo its timestamps.",
+  "limitation": "No transactions across rows and no SQL. It depends on GFS and on the Chubby lock service: if Chubby is down for long, Bigtable is down too.",
+  "note_question": "Why does Webtable store pages under reversed host names, such as com.cnn.www? What does this teach you about choosing row keys?",
+  "notes_slide1": "Bigtable was built at Google over two and a half years and, by 2006, was used by more than sixty products, including web indexing, Google Earth and Google Finance. Section 1 states the goals: wide applicability, scalability, high performance and high availability, on clusters from a handful to thousands of servers. Bigtable looks like a database but does not offer the full relational model. Section 2 defines its data model as a sparse, distributed, persistent, multi-dimensional sorted map. The running example is the Webtable. Row keys are URLs with the host name reversed, so pages from the same domain sit next to each other. Rows are kept in lexicographic order and split into tablets, the unit of distribution and load balancing, so a scan of a short row range touches few machines. Any read or write under one row key is atomic. Column keys have the form family:qualifier; the anchor family has one column per referring site. Each cell keeps several versions, indexed by 64-bit timestamps and stored newest first.",
+  "notes_slide2": "Section 5.3 explains how a tablet server serves data. The persistent state of a tablet lives in GFS, Google's distributed file system. A write is checked, recorded in a commit log of redo records, and only then inserted into the memtable, a sorted buffer in memory. A read runs on a merged view of the memtable and a sequence of SSTables. An SSTable is an immutable, ordered map from keys to values, stored in blocks of typically 64 KB with an index. Because all these structures are sorted, merging them is cheap. To recover a tablet, a server replays the log from saved redo points. Section 5.4 adds compactions: a full memtable becomes a new SSTable, and merging compactions combine files; a major compaction also removes deleted data. Clients can limit versions per family, for example keeping only the last three versions of each page. Cassandra uses the same write path. Bigtable, however, relies on a single master and on Chubby, which Cassandra's peer-to-peer design avoids."
+ },
+ {
+  "label": "Brewer 2012",
+  "kind": "Required",
+  "course_key": "Brewer 2012, CAP Twelve Years Later (IEEE Computer 45(2))",
+  "short_title": "Partitions Are Rare, So CAP Is Not Pick Two",
+  "citation": "Brewer, E. (2012). CAP twelve years later: How the \"rules\" have changed. Computer, 45(2), 23–29. https://doi.org/10.1109/MC.2012.37",
+  "problem": "CAP was widely read as 'pick two of consistency, availability and partition tolerance', and NoSQL used it against databases. Twelve years on, its author asks what the theorem really forbids.",
+  "key_ideas": [
+   "CAP forbids only perfect consistency and availability during a partition, which is rare",
+   "The choice can differ per operation, per data item or per user, not once per system",
+   "In practice a partition is a timeout: cancel the operation (lose A) or go on (risk C)"
+  ],
+  "key_term": {
+   "term": "Partition mode",
+   "definition": "A state entered after a partition is detected, in which a system limits some operations and logs extra history"
+  },
+  "slide2_title": "Detect, Limit, Then Recover and Compensate",
+  "findings": [
+   "Decide per invariant: allow duplicates to merge later, or delay risky actions like card charges",
+   "After a partition, version vectors or CRDTs help merge the histories of both sides",
+   "Mistakes users already saw need compensation, e.g. a bank's fee after an ATM overdraft"
+  ],
+  "course_link": "Lesson 9-1's slides on the stale read and on CP and AP systems use this reading of CAP. In Practice 9, Worksheet 9B applies it to R + W > RF and to CAP choices.",
+  "limitation": "An essay built on examples such as ATMs and shopping carts. It gives design advice but no measurements, and how to compensate stays an open problem.",
+  "note_question": "Name one operation a global ticket platform should allow during a partition and one it should delay. How would it recover?",
+  "notes_slide1": "Brewer first stated the CAP theorem between 1998 and 2000. It says that a networked system sharing data can have at most two of three properties: consistency, meaning one up-to-date copy; high availability for updates; and tolerance to network partitions. The short form helped designers explore new systems, but Brewer now calls the two-of-three formulation misleading, for three reasons. First, partitions are rare, so there is little reason to give up C or A when there is no partition. Second, the choice can be made many times inside one system, for each operation, piece of data or user. Third, the properties are not binary: availability ranges from 0 to 100 percent, and there are many levels of consistency. A sidebar explains that the C in ACID is wider than the C in CAP, and that BASE names the availability-first approach. Brewer then links CAP to latency: during a timeout, a program must cancel the operation or proceed. Retrying for ever simply chooses C over A. Nodes may even disagree about whether a partition exists.",
+  "notes_slide2": "The main part of the article describes how to manage a partition in three steps: detect it, enter an explicit partition mode, and recover when communication returns. In partition mode, the designer looks at each operation and each invariant. Some invariants can be risked, such as unique keys, because duplicates are easy to find and merge later. Others must be protected, so the operation is blocked, changed or delayed: an order is recorded, and the card is charged after the partition. To recover, the system needs the history of both sides. Version vectors show which operations were concurrent, and CRDTs are data types that always converge. Amazon's shopping cart, merged by set union, is an informal example, with the side effect that deleted items can return. Finally, mistakes that users already saw must be compensated. An ATM in stand-in mode limits withdrawals to a fixed amount, such as 200 dollars, and the bank charges a fee if the balance went negative. Banks rely on auditing and compensation, not on perfect consistency."
+ },
+ {
+  "label": "Lakshman & Malik 2010",
+  "kind": "Optional",
+  "course_key": "Lakshman & Malik 2010, Cassandra (ACM SIGOPS OSR 44(2))",
+  "short_title": "Cassandra Joins Dynamo's Ring to Bigtable's Model",
+  "citation": "Lakshman, A., & Malik, P. (2010). Cassandra: A decentralized structured storage system. ACM SIGOPS Operating Systems Review, 44(2), 35–40. https://doi.org/10.1145/1773912.1773922",
+  "problem": "Facebook's Inbox Search had to index the messages of over 100 million users, with billions of writes per day, across data centres. It needed high write throughput and no single point of failure.",
+  "key_ideas": [
+   "Data model from Bigtable: rows of column families, with columns sorted by name or time",
+   "Distribution from Dynamo: consistent hashing on a ring, N replicas, gossip and quorums",
+   "Each write goes to a commit log, then memory; full buffers become files merged later"
+  ],
+  "key_term": {
+   "term": "Super column family",
+   "definition": "A column family nested inside a column family, accessed as family:super column:column"
+  },
+  "slide2_title": "Inbox Search Ran on 150 Nodes With 50+ TB of Data",
+  "findings": [
+   "Load balancing moves lightly loaded nodes on the ring instead of using Dynamo's virtual nodes",
+   "An accrual failure detector reports a level of suspicion, not a simple up or down verdict",
+   "Median search latency was 15.69 ms for interactions and 18.27 ms for term search"
+  ],
+  "course_link": "Lesson 9-3's Cassandra slides start from this design. In Practice 9 Part B, the refused query without a partition key shows the ring; the clustering order shows Bigtable.",
+  "limitation": "Describes the 2009 system. Super columns and its three-call API are gone: CQL 3 tables replaced column families, and virtual nodes are now used.",
+  "note_question": "Unlike Dynamo, Cassandra does not read before it writes. Why does this suit Inbox Search, and what might it cost?",
+  "notes_slide1": "Avinash Lakshman, one of the Dynamo authors, moved to Facebook and built Cassandra with Prashant Malik. The paper is six pages long. Inbox Search, launched in June 2008 for about 100 million users, let people search their Facebook messages and had to handle billions of writes per day. Section 3 describes the data model. A table is a distributed multi-dimensional map indexed by a key, and every operation under one row key is atomic per replica. Columns are grouped into column families, as in Bigtable, and an application can sort columns by time or by name. Super column families add one more level of nesting. The API has only three calls: insert, get and delete. Section 5 describes the distribution layer. Keys are placed on a ring by consistent hashing, but with an order-preserving hash. Each key is stored on N nodes, chosen by policies called Rack Unaware, Rack Aware and Datacenter Aware. ZooKeeper elects a leader that assigns ranges, and membership spreads by gossip.",
+  "notes_slide2": "Section 5.6 shows the storage engine, which follows Bigtable. A write is first appended to a commit log on a dedicated disk and then applied to an in-memory structure. When this structure passes a size threshold, it is written to disk as a sorted file with an index. A background process merges these files, like Bigtable's compactions. A read checks memory first and then the files from newest to oldest, using a Bloom filter in each file to skip files that cannot hold the key. Section 6 reports experience. Before launch, 7 TB of inbox data for over 100 million users was indexed from MySQL with MapReduce jobs. The production cluster held more than 50 TB on 150 nodes, split between east and west coast data centres. Developers asked for atomic operations across keys, mainly to maintain secondary indexes. The conclusion lists compression, atomicity across keys and secondary indexes as future work; later versions of Cassandra added several of these. Read it after Dynamo and Bigtable to see both parents in one system."
+ },
+ {
+  "label": "Corbett et al. 2012",
+  "kind": "Optional",
+  "course_key": "Corbett et al. 2012, Spanner (OSDI)",
+  "short_title": "Global SQL Transactions With Bounded Clock Error",
+  "citation": "Corbett, J. C., Dean, J., Epstein, M., Fikes, A., et al. (2012). Spanner: Google's globally-distributed database. In Proceedings of the 10th USENIX Symposium on Operating Systems Design and Implementation (OSDI '12) (pp. 251–264). USENIX Association.",
+  "problem": "Bigtable scaled but was hard to use for complex, changing schemas and gave no strong consistency across data centres. Google's advertising system F1 needed transactions, SQL and replicas in several regions.",
+  "key_ideas": [
+   "Data is sharded across many Paxos groups, with replicas in data centres around the world",
+   "TrueTime returns the time as an interval whose width is the clock uncertainty",
+   "Commit wait: a transaction waits out the uncertainty, so timestamps follow real order"
+  ],
+  "key_term": {
+   "term": "External consistency",
+   "definition": "If transaction T1 commits before T2 starts, T1 gets a smaller commit timestamp than T2"
+  },
+  "slide2_title": "F1 Moved Google's Ad Backend From MySQL to Spanner",
+  "findings": [
+   "GPS and atomic clocks kept the uncertainty between about 1 and 7 ms, usually 4 ms",
+   "In tests with one replica, commit wait cost about 5 ms and Paxos about 9 ms",
+   "F1's last manual MySQL resharding took over two years; Spanner reshards automatically"
+  ],
+  "course_link": "Lesson 9-1's two paths to the relational problem include this one: keep SQL and ACID across sites. Its distributed SQL examples, CockroachDB and YugabyteDB, follow Spanner.",
+  "limitation": "Needs Google's GPS and atomic-clock time service. In 2012 secondary indexes were manual, and F1 commits took 72 to 103 ms on average.",
+  "note_question": "Spanner makes every write wait out clock uncertainty. Why is that worth it for F1, and when would Cassandra be a better choice?",
+  "notes_slide1": "Spanner is Google's database that shards data across many sets of Paxos state machines in data centres around the world. It was designed to scale to millions of machines across hundreds of data centres and trillions of rows. Section 1 explains why it was built. Many teams used Bigtable but found it hard to use for complex, evolving schemas, and it gave no strong consistency across data centres. Others chose Megastore for its synchronous replication despite poor write throughput. Spanner therefore grew from a Bigtable-like versioned key-value store into a multi-version database with schematised semi-relational tables, general-purpose transactions and a SQL-based query language. Every row has a primary key, so underneath it still looks like a key-value store. Applications can choose which data centres hold their data and how many replicas exist. Inside a Paxos group, a long-lived leader keeps a lock table for two-phase locking. Transactions that span groups use two-phase commit run over Paxos, which reduces its availability problems.",
+  "notes_slide2": "The key enabler is TrueTime, described in section 3. TT.now() does not return a single time but an interval that is guaranteed to contain the true time. Half its width, called epsilon, is the clock uncertainty. Time masters with GPS receivers or atomic clocks serve every data centre, and in production epsilon varied from about 1 to 7 ms, 4 ms most of the time. Section 4 uses it for external consistency. A transaction chooses a commit timestamp and then waits until that time has definitely passed before it releases its locks. Because of this commit wait, a transaction that commits before another starts always has a smaller timestamp. TrueTime also allows lock-free read-only transactions and consistent snapshot reads across the whole database. Section 5.4 describes F1, a rewrite of Google's advertising backend. Its MySQL database had been sharded by hand. F1 runs five replicas, two on the US west coast and three on the east coast, and failovers were nearly invisible to its team."
+ },
+ {
+  "label": "Cattell 2010",
+  "kind": "Optional",
+  "course_key": "Cattell 2010, Scalable SQL and NoSQL Data Stores (SIGMOD Record 39(4))",
+  "short_title": "Scalable Stores Give Up Some Guarantees to Scale",
+  "citation": "Cattell, R. (2010). Scalable SQL and NoSQL data stores. ACM SIGMOD Record, 39(4), 12–27. https://doi.org/10.1145/1978915.1978919",
+  "problem": "By 2010 many new data stores promised to scale simple reads and writes over many servers, with little shared vocabulary and few benchmarks. Cattell compares them for readers who must choose one.",
+  "key_ideas": [
+   "NoSQL here means six features, e.g. horizontal scaling, simple APIs and weaker concurrency",
+   "Four groups: key-value, document, extensible record (wide-column) and scalable relational",
+   "Each system is compared on data model, consistency, storage, durability and queries"
+  ],
+  "key_term": {
+   "term": "Simple operations",
+   "definition": "Key lookups and reads or writes of one or a few records, as opposed to complex queries or joins"
+  },
+  "slide2_title": "Neither SQL nor NoSQL Wins for Every Application",
+  "findings": [
+   "Memcached, Dynamo and Bigtable are named as the proofs of concept behind most systems",
+   "Predicts NoSQL will last, while new scalable SQL systems win where ACID matters",
+   "Admits a gaping hole: almost no benchmarks compare the systems on equal terms"
+  ],
+  "course_link": "Supports Lesson 9-2's four data models and Lesson 9-3's choice between PostgreSQL, MongoDB and Cassandra. The comparison in your Practice 9 report asks the same question.",
+  "limitation": "A 2010 snapshot built from documentation, not tests. It leaves out graph databases, and many products, MongoDB included, have changed a lot.",
+  "note_question": "Which of Cattell's 2010 predictions came true? Use Lesson 9-3's slide on MongoDB today as part of your evidence.",
+  "notes_slide1": "Rick Cattell, a database consultant, wrote this survey at the height of the NoSQL wave. He focuses on systems that scale simple operations, such as key lookups and single-record updates, over many servers that share no memory or disk. He defines NoSQL by six features: horizontal scaling of simple operations, replication and partitioning, a simple call-level interface instead of SQL, a weaker concurrency model than ACID, efficient use of distributed indexes and RAM, and the ability to add attributes to records at any time. He names memcached, Dynamo and Bigtable as the proofs of concept behind the field. Graph and object databases are explicitly left out. The paper then describes the systems in four groups. Key-value stores, such as Voldemort and Riak, offer lookups by key. Document stores, such as MongoDB and CouchDB, store nested documents with indexes. Extensible record stores, such as HBase and Cassandra, follow Bigtable. Scalable relational systems, such as MySQL Cluster and VoltDB, try to keep SQL and ACID.",
+  "notes_slide2": "Cattell warns at the start that the systems are moving targets and that some statements may already be wrong. That warning matters today. In 2010 he describes MongoDB as GPL open source, offering atomic operations on fields but not the global consistency of a traditional DBMS. Since then MongoDB moved to the SSPL licence, added multi-document ACID transactions in version 4.0, and made write concern majority the default in version 5.0. Section 6 gives use cases: key-value stores for one kind of object looked up by one attribute, document stores for several kinds of objects, extensible record stores for large tables split over many nodes, and scalable SQL where transactions and joins matter. Section 7 makes predictions. Many developers will give up global ACID for scalability. NoSQL will not be a passing fad. New relational systems will also take a large share. The field will consolidate. He also admits that benchmarks are missing, so his comparison rests on architecture alone. Always check the date of what you read about databases."
+ }
+]

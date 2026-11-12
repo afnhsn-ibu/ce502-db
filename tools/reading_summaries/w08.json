@@ -1,0 +1,170 @@
+[
+ {
+  "course_key": "Dean & Ghemawat 2004, MapReduce (OSDI)",
+  "label": "Dean & Ghemawat 2004",
+  "kind": "Required",
+  "short_title": "Write Map and Reduce; the Library Does the Rest",
+  "citation": "Dean, J., & Ghemawat, S. (2004). MapReduce: Simplified data processing on large clusters. In Proceedings of the 6th Symposium on Operating Systems Design and Implementation (OSDI '04) (pp. 137–150). USENIX Association.",
+  "problem": "Google ran hundreds of simple computations over huge data, such as crawled pages and request logs. Each needed many machines, and the code for parallelism, data distribution and failures hid the simple logic.",
+  "key_ideas": [
+   "Map turns each input record into intermediate key/value pairs; reduce merges all values per key",
+   "Input is split into M pieces of 16 to 64 MB; intermediate keys are spread over R reduce tasks",
+   "A master assigns tasks to idle workers and passes on where map output sits on local disks"
+  ],
+  "key_term": {
+   "term": "Re-execution",
+   "definition": "MapReduce's main fault tolerance method: a failed worker's tasks are simply run again elsewhere"
+  },
+  "slide2_title": "Failures Are Normal, So Tasks Are Simply Rerun",
+  "findings": [
+   "Completed map tasks rerun after a failure, because their output was on the failed machine's disk",
+   "Map tasks run where GFS keeps a copy of their input, which saves scarce network bandwidth",
+   "Backup copies of the last tasks beat slow machines: a sort took 44% longer without them"
+  ],
+  "course_link": "Lesson 8-3's slide Example: Counting Words with MapReduce comes from this paper. In Practice 8, DuckDB's GROUP BY queries also split, aggregate and merge, but on one laptop's cores.",
+  "limitation": "Every job writes its results to disk, and chains of jobs read them back, so iterative and interactive work is slow. RDDs were designed to fix this.",
+  "note_question": "Why does MapReduce work best when map and reduce are deterministic? What could go wrong after a failure if they were not?",
+  "notes_slide1": "Jeffrey Dean and Sanjay Ghemawat built MapReduce at Google after years of writing special-purpose programs over crawled documents and web logs. Each program was simple, such as building an inverted index or counting requests per URL, but had to run on hundreds or thousands of machines. Code for parallelism, data distribution and failures made it complex. Their answer, inspired by functional programming, is a two-function interface. Map takes an input record and emits intermediate key/value pairs. The library groups all values with the same key, and reduce merges them, usually into zero or one output value. Word count is the standard example: map emits each word with the count 1, and reduce sums the counts per word. Section 2 shows that many other tasks fit the model, including distributed grep, reverse web-link graphs, inverted indexes and distributed sort. The programmer writes only these two functions plus a small configuration; the library handles everything else.",
+  "notes_slide2": "Section 3 describes the implementation for Google's clusters of cheap PCs with 2 to 4 GB of memory, local IDE disks and GFS. The input is split into M pieces of 16 to 64 MB. A master assigns map and reduce tasks to idle workers. Map workers write their output to local disk, divided into R regions by a partitioning function such as hash(key) mod R. Reduce workers fetch their region from every map worker, sort it by key and call reduce. Typical jobs used M = 200,000 and R = 5,000 on 2,000 machines. Because failures are common, the master pings workers. If a worker stops responding, its completed and in-progress map tasks and its in-progress reduce tasks run again elsewhere. When map and reduce are deterministic, the result equals that of a sequential run. Two more ideas save time: map tasks run near their input data, and backup copies of the last slow tasks, called stragglers, cut a large sort's time by 44%."
+ },
+ {
+  "course_key": "Zaharia et al. 2012, Resilient Distributed Datasets (NSDI)",
+  "label": "Zaharia et al. 2012",
+  "kind": "Required",
+  "short_title": "Keep Data in Memory, Recover It From Lineage",
+  "citation": "Zaharia, M., Chowdhury, M., Das, T., Dave, A., et al. (2012). Resilient distributed datasets: A fault-tolerant abstraction for in-memory cluster computing. In Proceedings of the 9th USENIX Symposium on Networked Systems Design and Implementation (NSDI '12) (pp. 15–28). USENIX Association.",
+  "problem": "MapReduce shares data between jobs only through stable storage. Iterative algorithms and interactive queries reuse the same data many times, so replication, disk I/O and serialisation dominate their run time.",
+  "key_ideas": [
+   "An RDD is a read-only, partitioned collection, created only by coarse-grained transformations",
+   "Lineage records how each RDD was derived, so a lost partition is recomputed, not replicated",
+   "Transformations are lazy; actions such as count run them; persist keeps a result in memory"
+  ],
+  "key_term": {
+   "term": "Lineage",
+   "definition": "The graph of transformations, such as map, filter and join, that built an RDD from data in storage"
+  },
+  "slide2_title": "Coarse-Grained Writes Make Fault Tolerance Cheap",
+  "findings": [
+   "Spark was up to 20x faster than Hadoop for iterative jobs and scanned 1 TB interactively in 5-7 s",
+   "Logistic regression and PageRank gain because their data stays in memory across iterations",
+   "RDDs do not suit fine-grained updates to shared state, such as a web application's database"
+  ],
+  "course_link": "Lesson 8-3's slide Batch, Stream and Hybrid Processing places Spark in the processing layer. In Practice 8, six queries scan the same Parquet files; an RDD could keep them in memory.",
+  "limitation": "Long lineage chains, as in many PageRank iterations, still need checkpoints. Most Spark users now work with DataFrames and SQL, not RDDs.",
+  "note_question": "In the log-mining example of section 2.2.1, a node holding part of errors fails. What exactly does Spark recompute, and from what?",
+  "notes_slide1": "Matei Zaharia and colleagues at UC Berkeley start from a weakness of MapReduce and Dryad. These frameworks offer high-level operators and handle distribution and failures, but they have no abstraction for distributed memory. The only way to pass data from one job to the next is to write it to a distributed file system, which costs replication, disk I/O and serialisation. This hurts two growing workloads: iterative algorithms, such as PageRank, k-means and logistic regression, which reuse the same data in every iteration, and interactive data mining, where a user runs many ad hoc queries on the same subset. Specialised systems such as Pregel kept data in memory, but only for one pattern of computation. Distributed shared memory and key-value stores allow fine-grained updates, but then fault tolerance requires replicating data or logging every update across the network. The paper proposes resilient distributed datasets, RDDs, as a general memory abstraction that is still cheap to make fault tolerant.",
+  "notes_slide2": "An RDD is a read-only collection of records split into partitions across machines. It can only be created by deterministic, coarse-grained transformations, such as map, filter and join, applied to stored data or to other RDDs. Because the same operation applies to all items, Spark need not log the data, only the transformations, called the lineage. If a machine fails, Spark recomputes just the lost partitions from their parents, in parallel on other machines. Transformations are lazy; actions such as count, collect and save trigger the computation, and persist asks Spark to keep a result in memory. In the log-mining example, an operator filters error lines from terabytes of logs once, keeps them in memory and queries them repeatedly. Section 3 shows logistic regression and PageRank in a few lines of Scala. The paper reports Spark up to 20 times faster than Hadoop on iterative applications. RDDs are a poor fit for fine-grained, asynchronous updates; databases suit those better."
+ },
+ {
+  "course_key": "Armbrust et al. 2021, Lakehouse (CIDR)",
+  "label": "Armbrust et al. 2021",
+  "kind": "Required",
+  "short_title": "One Platform: Warehouse Features on Open Lake Files",
+  "citation": "Armbrust, M., Ghodsi, A., Xin, R., & Zaharia, M. (2021). Lakehouse: A new generation of open platforms that unify data warehousing and advanced analytics. In Proceedings of the 11th Conference on Innovative Data Systems Research (CIDR '21).",
+  "problem": "Most companies copy data from a cheap data lake into a separate warehouse for SQL. This two-tier design adds ETL steps, stale data and double storage cost, and supports machine learning tools poorly.",
+  "key_ideas": [
+   "Store all data in open formats such as Parquet in low-cost object storage, e.g. Amazon S3",
+   "A transactional metadata layer (Delta Lake, Iceberg) records which files form each table version",
+   "Caching, auxiliary statistics and data layout bring SQL speed close to that of a warehouse"
+  ],
+  "key_term": {
+   "term": "Lakehouse",
+   "definition": "Low-cost, directly readable storage plus warehouse features: ACID transactions, versioning and indexing"
+  },
+  "slide2_title": "Three Generations of Analytics Platforms",
+  "findings": [
+   "Names four problems of lake plus warehouse: reliability, staleness, weak ML support and total cost",
+   "Per-file min-max statistics let the engine skip files; Z-order clustering makes skipping effective",
+   "On TPC-DS at scale factor 30,000, Delta Engine matched four cloud warehouses at a lower cost"
+  ],
+  "course_link": "Lesson 8-3's slide Warehouse, Data Lake and Lakehouse presents this design. In Practice 8, DuckDB queries open Parquet files in place, with no load step, as the paper proposes.",
+  "limitation": "A position paper by Databricks founders about their own products. The authors ran the benchmark themselves and do not name the warehouses.",
+  "note_question": "The authors say lakehouses give up part of the data independence of classic databases. What do they mean, and why do they accept it?",
+  "notes_slide1": "The authors, founders of Databricks, describe three generations of analytics platforms. In the first, data was loaded from operational databases into a warehouse with schema-on-write, as in Week 7. As data grew and became unstructured, such as video, audio and text, a second generation stored raw data in data lakes: cheap storage with open file formats, first HDFS, later cloud object stores such as S3. A subset was then loaded again into a warehouse for business intelligence. The authors say this two-tier design is used at virtually all Fortune 500 companies, and that it causes four problems. Reliability suffers because two systems must be kept consistent. Data in the warehouse is stale; they cite a survey in which 86% of analysts use out-of-date data. Machine learning tools such as TensorFlow and PyTorch work poorly through warehouse interfaces. And total cost rises with continuous ETL, double storage and lock-in to proprietary formats.",
+  "notes_slide2": "Section 3 defines the lakehouse: low-cost, directly accessible storage that also offers ACID transactions, versioning, auditing, indexing, caching and query optimisation. The design has three parts. First, a transactional metadata layer, such as Delta Lake or Apache Iceberg, records which Parquet files belong to each version of a table. This enables transactions, time travel to old versions, schema enforcement and access control, while the data stays in open files. Second, SQL performance comes from optimisations that leave the file format unchanged: caching hot data on SSD or in memory, keeping min-max statistics per file to skip data, and clustering records, for example with Z-order curves. Third, declarative DataFrame APIs let machine learning libraries benefit from these optimisations. The authors report that Delta Engine, on TPC-DS at scale factor 30,000, gave performance comparable to four cloud warehouses at lower cost. They accept that the file format becomes part of the public interface."
+ },
+ {
+  "course_key": "Ghemawat, Gobioff & Leung 2003, The Google File System (SOSP)",
+  "label": "Ghemawat et al. 2003",
+  "kind": "Optional",
+  "short_title": "A File System Built for Failures and Huge Files",
+  "citation": "Ghemawat, S., Gobioff, H., & Leung, S.-T. (2003). The Google file system. In Proceedings of the 19th ACM Symposium on Operating Systems Principles (SOSP '03) (pp. 29–43). ACM. https://doi.org/10.1145/945445.945450",
+  "problem": "Google's data processing ran on thousands of cheap machines, where some part is always broken. Files were many gigabytes and mostly appended to. Classic file system assumptions no longer fitted this workload.",
+  "key_ideas": [
+   "Files are split into 64 MB chunks, each stored by default as three replicas on chunkservers",
+   "A single master holds all metadata in memory; clients send data to chunkservers directly",
+   "Record append lets many clients add to one file at once, under a relaxed consistency model"
+  ],
+  "key_term": {
+   "term": "Chunk",
+   "definition": "A fixed 64 MB piece of a GFS file: the unit of storage and replication on chunkservers"
+  },
+  "slide2_title": "Throughput Over Latency, Appends Over Overwrites",
+  "findings": [
+   "In 2003 the largest clusters had over 1,000 storage nodes and over 300 TB of disk storage",
+   "The master keeps under 64 bytes of metadata per 64 MB chunk, so one master can manage it all",
+   "High sustained bandwidth matters more than low latency for the batch workloads GFS serves"
+  ],
+  "course_link": "Lesson 8-3's slide Where Big Data Lives: The Storage Layer builds on GFS and its copy, HDFS. The real Practice 8 Parquet files, about 50 MB each, would each fit in one chunk.",
+  "limitation": "The single master limits the number of files, and small files and low-latency access are poorly served. Google later replaced GFS with Colossus.",
+  "note_question": "Why does GFS use 64 MB chunks when ordinary file systems use blocks of a few kilobytes? What does it gain and what does it lose?",
+  "notes_slide1": "Ghemawat, Gobioff and Leung designed the Google File System around observations that break with earlier file systems. First, component failures are the norm: with hundreds or thousands of cheap machines, some disks, memory or power supplies are always failing, so monitoring and automatic recovery must be built in. Second, files are huge: multi-gigabyte files are common, and managing billions of small files would be unwieldy. Third, most files change by appending, not overwriting; once written, they are read, often sequentially. Fourth, designing the applications and the file system together allows a simpler interface. GFS therefore offers create, delete, open, close, read and write, but not the full POSIX standard, and adds snapshot and record append. A GFS cluster has one master and many chunkservers. Files are divided into chunks of 64 MB, far larger than usual file system blocks, and each chunk is stored by default as three replicas on different machines.",
+  "notes_slide2": "The single master keeps the namespace and the map from files to chunks in memory, with less than 64 bytes of metadata per chunk. Clients ask the master only where chunks are, then read and write data directly with chunkservers, so the master does not become a bottleneck. The consistency model is relaxed: with record append, many producers can append to the same file at once, and GFS guarantees that each record is written atomically at least once, though duplicates and padding may appear. Applications handle these with checksums and unique record identifiers. The master re-replicates chunks when machines fail and moves chunks to balance load. In 2003 the largest clusters had over 1,000 storage nodes and over 300 TB of disk. The design favours high sustained bandwidth over low latency. Read this paper together with MapReduce: MapReduce schedules map tasks on the machines that hold a replica of their 64 MB input. The open-source HDFS copied this design."
+ },
+ {
+  "course_key": "Kreps, Narkhede & Rao 2011, Kafka (NetDB)",
+  "label": "Kreps et al. 2011",
+  "kind": "Optional",
+  "short_title": "A Log, Not a Queue, for Activity Data",
+  "citation": "Kreps, J., Narkhede, N., & Rao, J. (2011). Kafka: A distributed messaging system for log processing. In Proceedings of the NetDB Workshop (NetDB '11), Athens, Greece.",
+  "problem": "LinkedIn produced huge volumes of activity and system log data, needed both by offline analysis and by real-time site features. Messaging systems were too slow, and log aggregators served only offline loading.",
+  "key_ideas": [
+   "A topic is split into partitions; each partition is an append-only log of segment files on disk",
+   "Messages have no IDs: consumers pull by offset and track their own position, not the broker",
+   "Messages are kept for a fixed time, typically 7 days, so consumers can rewind and replay them"
+  ],
+  "key_term": {
+   "term": "Offset",
+   "definition": "A message's logical position in a partition's log, used by consumers to pull data and to replay it"
+  },
+  "slide2_title": "Simple Storage Gives High Throughput",
+  "findings": [
+   "Producers sent about 50,000 messages/s one at a time and 400,000 messages/s in batches of 50",
+   "Consumers read 22,000 messages per second, more than four times ActiveMQ and RabbitMQ",
+   "Consumer groups share a topic's partitions; ZooKeeper tracks members, owners and offsets"
+  ],
+  "course_link": "Lesson 8-3's slides Getting Data In: Ingestion and Collection and Hybrid Designs: Lambda and Kappa rely on Kafka. Practice 8's optional Part E compares stream and batch.",
+  "limitation": "The 2011 version had no replication, so a failed broker could lose data, and delivery was only at least once. Replication came later.",
+  "note_question": "Why does letting each consumer track its own offset make the broker simpler and replaying data cheap?",
+  "notes_slide1": "Jay Kreps, Neha Narkhede and Jun Rao built Kafka at LinkedIn for log data: user activity, such as page views, clicks and searches, and operational metrics, such as call latency and CPU use. This data was no longer used only for offline reports. It also fed search relevance, recommendations, advertising, security and news feeds, so it had to arrive within seconds. Its volume is far larger than the core business data. Traditional messaging systems, such as JMS products, offered rich delivery guarantees that log data does not need, sent each message in its own network round trip, were weak at distribution, and slowed down when unread messages piled up. Log aggregators such as Scribe and Flume moved data into Hadoop well but mainly for offline use, and usually pushed data to consumers. Kafka combines the two. Producers publish messages to topics, brokers store them, and consumers pull messages at their own rate, which also makes it easy to rewind.",
+  "notes_slide2": "Each topic is divided into partitions spread over brokers. A partition is a log: a sequence of segment files of about 1 GB, and new messages are always appended to the last one. A message has no separate ID; it is addressed by its offset in the log, so no random-access index is needed. Kafka does not cache messages itself but relies on the operating system's page cache, and it sends file data to the network with the sendfile system call, avoiding extra copies. The broker is stateless: each consumer remembers how far it has read. Messages are deleted after a retention period, typically 7 days, so a consumer can go back to an old offset and process data again, for example after fixing a bug. Consumer groups divide the partitions of a topic among their members, and ZooKeeper records which consumer owns which partition and the last offset read. Delivery is at least once. In 2011, Kafka handled hundreds of gigabytes and close to a billion messages a day."
+ },
+ {
+  "course_key": "Laney 2001, 3D Data Management (META Group)",
+  "label": "Laney 2001",
+  "kind": "Optional",
+  "short_title": "Data Grows in Volume, Velocity and Variety",
+  "citation": "Laney, D. (2001, February 6). 3D data management: Controlling data volume, velocity, and variety [Research note]. META Group.",
+  "problem": "Around 2000, e-commerce and company mergers made data harder to manage. Laney, an analyst at META Group, argues that the challenge is not only the amount of data but also its speed and its variety.",
+  "key_ideas": [
+   "Volume: e-commerce captures more detail per transaction, and firms are reluctant to delete data",
+   "Velocity: faster customer interaction raises the speed at which data must be captured and used",
+   "Variety: incompatible formats, structures and meanings across systems, partners and mergers"
+  ],
+  "key_term": {
+   "term": "Three V's",
+   "definition": "Volume, velocity and variety: Laney's three dimensions of the growing data management challenge"
+  },
+  "slide2_title": "Each Dimension Calls for Its Own Strategies",
+  "findings": [
+   "Volume: tiered storage, sampling, removing redundant data and moving rarely used data offline",
+   "Velocity: operational data stores, caches, and latency matched to real decision cycles",
+   "Variety: data profiling, XML translators, middleware and repositories of shared metadata"
+  ],
+  "course_link": "Lesson 8-2's slide The Three Original V's comes from this note; the course adds seven more, for ten. In Practice 8, Q1, Q2 and Q5 show volume, velocity and variety on taxi data.",
+  "limitation": "A short analyst note without data or method. It never uses the term big data, and many tools it suggests, such as EAI adapters, are dated.",
+  "note_question": "Laney later said that V's such as veracity and value matter but do not define big data. Do you agree? Use one example from Practice 8.",
+  "notes_slide1": "Doug Laney wrote this research note at META Group, an IT research firm later bought by Gartner, in February 2001. It is very short and was written for IT managers, not researchers. Its starting point is that e-commerce, mergers and acquisitions, and collaboration between companies were pushing traditional data management to its limits. Laney argues that the problem has three dimensions. Volume grows because electronic channels record much more detail about each transaction and reach more customers, and because companies are reluctant to throw data away. Velocity grows because e-commerce speeds up every point of interaction, so data must be captured and used faster, and response speed becomes a competitive advantage. Variety grows because data arrives in incompatible formats, with misaligned structures and inconsistent meanings, from many applications, partners and merged companies. He also stresses shared, enterprise-wide data definitions, so that departments work from one consistent view of the business.",
+  "notes_slide2": "For each dimension, Laney lists strategies that IT departments could use. For volume, he suggests tiered storage, collecting only data that current processes will use, sampling for analysis, profiling sources to remove redundant data, and moving rarely used data to cheaper storage. For velocity, he suggests operational data stores, caches in front of back-end systems, and designs whose latency matches how fast decisions are actually made, rather than making everything real time. For variety, he suggests data profiling, translators based on XML, integration adapters, data access middleware and metadata repositories. He predicted that variety would be the hardest barrier in the following years. The note does not use the term big data; the three V's were linked to big data only later. In a 2012 blog post that republished the note, Laney said that other V's, such as veracity and value, are important but should not define big data. Lesson 8-2 uses ten V's in total."
+ }
+]

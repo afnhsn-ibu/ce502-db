@@ -1,0 +1,142 @@
+[
+ {
+  "label": "Malkov & Yashunin 2020",
+  "kind": "Required",
+  "course_key": "Malkov & Yashunin 2020, HNSW (IEEE TPAMI 42(4))",
+  "short_title": "Layers of Links Keep Graph Search Logarithmic",
+  "citation": "Malkov, Y. A., & Yashunin, D. A. (2020). Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs. IEEE Trans. Pattern Anal. Mach. Intell., 42(4), 824–836. https://doi.org/10.1109/TPAMI.2018.2889473",
+  "problem": "Graph indexes find neighbours by walking greedily from node to node. In a flat navigable small world (NSW) graph, the work grows faster than logarithmically with the data, and search fails badly on clustered or low-dimensional data.",
+  "key_ideas": [
+   "Each new element gets a random top layer; the chance of reaching a higher layer falls exponentially",
+   "Search starts at the sparse top layer with long links, then drops layer by layer, like a skip list",
+   "A neighbour-selection heuristic picks links in different directions, so clusters stay connected"
+  ],
+  "key_term": {
+   "term": "ef (candidate list size)",
+   "definition": "How many closest candidates a search keeps; a larger ef gives higher recall but slower queries"
+  },
+  "slide2_title": "Fast, Robust Search That Pays in Memory",
+  "findings": [
+   "Clearly beat NSW, FLANN, Annoy, VP-tree and FALCONN on SIFT, GloVe, DEEP and CoPhIR datasets",
+   "Suggested settings: mL = 1/ln(M), Mmax0 = 2M, M from 5 to 48; link memory grows in proportion to M",
+   "On 200 million SIFT vectors it was faster and more accurate than Faiss PQ, but needed much more RAM"
+  ],
+  "course_link": "Lesson 11-1's slides 'HNSW: A Layered Graph of Neighbours' and 'Tuning HNSW and IVF' come from here. In Practice 11 you build it with m = 16 and vary ef_search.",
+  "limitation": "Assumes the whole graph and the vectors fit in RAM. Updates and deletions are left as future work, and the index is hard to distribute across nodes.",
+  "note_question": "Explain how the layers keep the search cost roughly logarithmic. Which parameter decides the memory use of the index, and why?",
+  "notes_slide1": "Malkov and Yashunin first posted this paper in 2016; the journal version appeared in 2020. Section 1 recalls that exact k-nearest neighbour search must compare the query with every element, so approximate methods accept a few errors, measured as recall. Proximity graphs were the fastest family, but greedy routing in them has two weaknesses: the number of steps grows quickly with the data, and clustered data can split the graph. Section 3 explains the cause in the authors' earlier NSW graph. The work of a search is the number of hops multiplied by the number of links checked at each hop, and both grow with the data, because the search passes through hubs with many links. HNSW separates links by length into layers. Every element has a maximum layer drawn from an exponentially decaying distribution, so the top layers hold few elements joined by long links. A search walks greedily on the top layer, then continues one layer lower from the best element found, down to layer 0.",
+  "notes_slide2": "Section 4 gives the algorithm. To insert an element, the index searches down from the top with ef = 1, then, from the element's own top layer down to layer 0, it searches with efConstruction candidates and links the element to M of them. Links are two-way, and a node with too many links is pruned back to Mmax, or Mmax0 on layer 0. The selection heuristic keeps a candidate only if it is closer to the new element than to any neighbour already chosen; this keeps links between clusters. A query runs the same search with ef. The authors suggest mL = 1/ln(M) and Mmax0 = 2M, which leaves M as the main choice: 5 to 48, with larger M for high recall or high dimensions. Links cost about 60 to 450 bytes per element, on top of the vectors. A 10-million-vector SIFT index with efConstruction = 100 was built in about 3 minutes on a 40-core server. Section 5 compares HNSW with other libraries using the ann-benchmarks tool. The discussion admits two gaps: deleting or updating elements, and distributing the index."
+ },
+ {
+  "label": "Jégou, Douze & Schmid 2011",
+  "kind": "Required",
+  "course_key": "Jégou, Douze & Schmid 2011, Product Quantization for Nearest Neighbor Search (IEEE TPAMI 33(1))",
+  "short_title": "Short Codes Let Billions of Vectors Fit in RAM",
+  "citation": "Jégou, H., Douze, M., & Schmid, C. (2011). Product quantization for nearest neighbor search. IEEE Transactions on Pattern Analysis and Machine Intelligence, 33(1), 117–128. https://doi.org/10.1109/TPAMI.2010.57",
+  "problem": "Methods such as LSH and FLANN re-rank candidates with the full vectors, so every vector must stay in RAM. This limits how many vectors one machine can search. The authors ask how to estimate distances from very short codes.",
+  "key_ideas": [
+   "Split each vector into m sub-vectors and quantize each one with its own small k-means codebook",
+   "With m = 8 sub-vectors and 256 centroids each, every vector becomes a 64-bit code",
+   "Distances come from precomputed tables: m look-ups and additions per database vector"
+  ],
+  "key_term": {
+   "term": "Asymmetric distance",
+   "definition": "Distance between the exact query and the code of a database vector; only the database side is quantized"
+  },
+  "slide2_title": "Quantize the Database Vectors, Not the Query",
+  "findings": [
+   "ADC beats SDC at the same cost: with m = 8, ADC with 64 centroids matched SDC with 256",
+   "IVFADC adds an inverted file and encodes residuals, so a query scans only a few lists",
+   "Beat FLANN at most operating points, with an index under 25 MB against over 250 MB for FLANN"
+  ],
+  "course_link": "Lesson 11-1's slide 'Product Quantization: Compressing Vectors' and the IVF-PQ row of 'Choosing an Index Type' come from here. Practice 11's IVFFlat is IVF without the codes.",
+  "limitation": "Tested only on SIFT and GIST image descriptors with Euclidean distance. Distances from codes are approximate; exact re-ranking needs full vectors.",
+  "note_question": "Describe how a vector becomes a short code. Why does the paper recommend quantizing the database vectors but not the query?",
+  "notes_slide1": "Section 1 starts from a problem that speed comparisons hide: memory. Exact search costs one distance per stored vector, and tree methods such as KD-trees are no faster in high dimensions. Approximate methods such as E2LSH and FLANN are fast, but they re-rank candidates with exact distances, so all vectors must stay in main memory. The authors want short codes from which distances can be estimated. A 64-bit code means 2 to the power 64 possible centroids, far too many for k-means to learn or for any computer to store. Section 2 solves this with a product quantizer. The vector is split into m equal sub-vectors, and each sub-vector is quantized separately with its own codebook of k* centroids, learned by k-means. The code is the list of m centroid numbers, so its length is m times log2 of k*. Only m times k* centroids are stored, yet together they describe (k*) to the power m points. For a fixed number of bits, fewer sub-vectors with more centroids each gave lower error; m = 8 and k* = 256 is a common choice.",
+  "notes_slide2": "Section 3 shows how to search with codes. In symmetric distance computation (SDC), the query is also encoded, and distances between centroids are read from tables. In asymmetric distance computation (ADC), the query keeps its exact values. For each query, the distances from each query sub-vector to all centroids of that sub-space are computed once; the distance to any database vector is then the sum of m table look-ups. Both cost the same, but the error of ADC is bounded by the quantization error, and that of SDC by twice that error, so the authors recommend ADC. ADC still compares the query with every code. Section 4 therefore adds an inverted file: a coarse k-means quantizer sends each vector to a list, and the product quantizer encodes the residual, the difference between the vector and its list centroid. A query visits only its w nearest lists. Section 5 tests this IVFADC method on one million SIFT and GIST vectors and on about 2 billion SIFT descriptors. IVF-PQ indexes in today's libraries follow this design."
+ },
+ {
+  "label": "Johnson et al. 2021",
+  "kind": "Optional",
+  "course_key": "Johnson, Douze & Jégou 2021, Billion-Scale Similarity Search with GPUs (IEEE Trans. Big Data 7(3))",
+  "short_title": "GPUs Make Billion-Vector Search Practical",
+  "citation": "Johnson, J., Douze, M., & Jégou, H. (2021). Billion-scale similarity search with GPUs. IEEE Transactions on Big Data, 7(3), 535–547. https://doi.org/10.1109/TBDATA.2019.2921572",
+  "problem": "Embeddings are usually produced on GPUs, but similarity search made poor use of them. Selecting the k smallest distances offers little parallelism, and earlier GPU methods handled only small data, binary codes or exact search.",
+  "key_ideas": [
+   "WarpSelect keeps the k-selection state in GPU registers and reads the distances only once",
+   "Exact search is a matrix multiplication with k-selection fused into the same GPU kernel",
+   "IVFADC with product quantization runs on GPUs; indexes are replicated or sharded over GPUs"
+  ],
+  "key_term": {
+   "term": "k-selection",
+   "definition": "Finding the k smallest values, and their positions, in a list of distances: the last step of every k-NN search"
+  },
+  "slide2_title": "Large Gains Over Earlier GPU and CPU Methods",
+  "findings": [
+   "On 1 billion SIFT vectors: 0.376 recall@10 in 17.7 µs per query, 8.5× faster than the prior GPU method",
+   "Exact k-means on 8.1 million MNIST images ran more than 2× faster than the BIDMach GPU library",
+   "Built a k-NN graph of 95 million images in 35 minutes and one of 1 billion vectors in under 12 hours"
+  ],
+  "course_link": "It runs Lesson 11-1's IVF and product quantization ideas at billion scale. Its sharded index, where each GPU returns a top-k and the results are merged, is Lesson 11-3's scatter and gather.",
+  "limitation": "Needs GPUs, whose memory limits index size, and PQ codes give modest top-1 recall. Much of the paper is CUDA detail, and Faiss has changed since 2017.",
+  "note_question": "When would you move vector search to GPUs instead of keeping it in the PostgreSQL server you already run?",
+  "notes_slide1": "This paper, first posted in 2017, describes the GPU part of Faiss, the similarity search library from Facebook AI Research. Section 1 explains the setting: images, videos and text are represented by vectors of 50 to over 1,000 dimensions, and collections reach a billion vectors. Such data does not fit in RAM uncompressed, so the authors use product quantization, which earlier work found more effective than binary codes. Section 2 restates the IVFADC index from Jégou et al.: a coarse quantizer chooses lists, and a product quantizer encodes the residuals in b bytes per vector. Section 3 explains the GPU: groups of 32 threads, called warps, run the same instruction, and registers are the fastest memory. The slow step is k-selection, keeping the k smallest distances. Heaps are serial, and earlier GPU methods needed several passes over memory. Section 4 presents WarpSelect: each thread keeps a short sorted queue, the warp keeps a sorted queue of the best k, and sorting networks merge them. It reads the input once and reaches up to 55% of peak memory bandwidth for k = 100.",
+  "notes_slide2": "Section 5 builds the search methods. Exact search computes distances with the cuBLAS matrix multiplication routine, then a fused kernel finishes each distance and passes it straight to k-selection, so the distance matrix is read only twice. For IVFADC, look-up tables for each query sit in fast shared memory while the inverted lists are scanned. Parts of the tables can be precomputed once per index. With several GPUs, an index is either replicated, so each copy serves part of the queries, or sharded, so each GPU holds part of the data and the partial results are merged. Section 6 reports the results. On one billion SIFT vectors with 8-byte codes, one GPU reached 0.376 recall@10 in 17.7 microseconds per query. On one billion DEEP vectors, four GPUs reached 0.4517 recall@1 in 0.0133 ms per query. A k-NN graph of 95 million images reached accuracy above 0.8 in 35 minutes; a comparable earlier graph of 36.5 million vectors had needed 128 CPU servers and 108.7 hours. Both the RAG and DPR papers of Week 12 use Faiss."
+ },
+ {
+  "label": "Subramanya et al. 2019",
+  "kind": "Optional",
+  "course_key": "Subramanya et al. 2019, DiskANN (NeurIPS)",
+  "short_title": "A Graph Index on SSD Serves a Billion Vectors",
+  "citation": "Jayaram Subramanya, S., Devvrit, Kadekodi, R., Krishnaswamy, R., & Simhadri, H. V. (2019). DiskANN: Fast accurate billion-point nearest neighbor search on a single node. In Advances in Neural Information Processing Systems 32 (NeurIPS 2019).",
+  "problem": "Graph indexes such as HNSW keep links and full vectors in RAM, so a billion vectors need several machines. Compressed IVF indexes fit in RAM but find the true nearest neighbour only about half the time. Can a cheap SSD hold the index?",
+  "key_ideas": [
+   "Vamana keeps some long-range edges (α > 1), so a search needs fewer hops and fewer disk reads",
+   "PQ-compressed vectors stay in RAM; the graph and the full vectors are stored together on SSD",
+   "Beam search reads several neighbourhoods per SSD round trip; full vectors re-rank the results"
+  ],
+  "key_term": {
+   "term": "1-recall@1",
+   "definition": "Share of queries for which the single returned result is the true nearest neighbour"
+  },
+  "slide2_title": "High Recall on One Machine with 64 GB of RAM",
+  "findings": [
+   "On 1 billion SIFT vectors: over 5,000 queries per second, under 3 ms mean latency, 95%+ 1-recall@1",
+   "In memory, Vamana matched or beat HNSW and NSG, and built DEEP1M in 149 s against 219 s for HNSW",
+   "Merging graphs of 40 overlapping clusters built a billion-point index within 64 GB of RAM"
+  ],
+  "course_link": "Lesson 11-2's slide 'The Cost of an Index' shows an HNSW index larger than its table; this paper is one answer. Lesson 11-3 notes that Cassandra's SAI vector index is also graph-based.",
+  "limitation": "Tests static datasets with Euclidean distance only and does not cover inserts or deletes. Building the merged billion-point index took about 5 days.",
+  "note_question": "Your HNSW index no longer fits in RAM. Would you buy more memory, shard the index, or use a disk-based graph? Why?",
+  "notes_slide1": "Section 1 describes two ways to index a billion vectors. Inverted indexes with compression, such as FAISS, use less than 64 GB of RAM for a billion 128-dimensional vectors, but because compression loses detail, their 1-recall@1 is around 0.5. Sharded in-memory graphs are accurate but large: an NSG index of 100 million vectors needs about 75 GB, so Alibaba's Taobao split 2 billion vectors over 32 machines. Moving a normal graph index to SSD would cost hundreds of random reads per query. A cheap SSD needs a few hundred microseconds per random read, so the authors aim for a few dozen reads in fewer than ten round trips. Section 2 presents Vamana. Like HNSW and NSG, it inserts points by running a greedy search and pruning the visited nodes to at most R neighbours. Its pruning rule has a parameter α: with α greater than 1, it also keeps longer edges, so the graph has a smaller diameter. Vamana starts from a random graph, searches from the medoid, and makes two passes over the data. Unlike HNSW, it needs no layers.",
+  "notes_slide2": "Section 3 builds the DiskANN system. To index a billion points with little RAM, k-means splits the data into 40 clusters, each point joins its 2 nearest clusters, a Vamana graph is built for each cluster in memory, and the graphs are merged by taking the union of their edges. At search time, RAM holds product quantization codes, for example 32 bytes per point, which give approximate distances. The SSD holds, for each point, its full vector and its neighbour list in a fixed-size block, so its position can be computed. Beam search reads the neighbourhoods of the W best candidates at once, with W from 2 to 8. Nodes within 3 or 4 hops of the start are cached in RAM. The full vectors arrive in the same disk reads and are used to re-rank the final results. Section 4 uses a workstation with 16 cores, 64 GB of RAM and consumer SSDs. Vamana needed 2 to 3 times fewer hops than HNSW and NSG. A single billion-point index reached 98.68% 1-recall@1 in under 5 ms; a compressed IVF method reached 62.74% with the same memory."
+ },
+ {
+  "label": "Aumüller et al. 2020",
+  "kind": "Optional",
+  "course_key": "Aumüller, Bernhardsson & Faithfull 2020, ANN-Benchmarks (Information Systems 87)",
+  "short_title": "Compare Indexes by Recall Against Query Speed",
+  "citation": "Aumüller, M., Bernhardsson, E., & Faithfull, A. (2020). ANN-Benchmarks: A benchmarking tool for approximate nearest neighbor algorithms. Information Systems, 87, 101374. https://doi.org/10.1016/j.is.2019.02.006",
+  "problem": "New nearest neighbour methods were often tested against a few rivals, on a few datasets, with unstated parameters. Results were hard to reproduce. The authors build a shared tool that compares implementations fairly.",
+  "key_ideas": [
+   "Each implementation runs in its own Docker container, on one CPU thread, behind a Python wrapper",
+   "A configuration file lists build and query parameters; the tool runs every combination",
+   "The framework, not the library, measures time and recall, so new metrics need no new runs"
+  ],
+  "key_term": {
+   "term": "Pareto frontier",
+   "definition": "The runs that no other run beats on both recall and queries per second, drawn as one curve"
+  },
+  "slide2_title": "Graph Indexes Lead, but No Method Wins Everywhere",
+  "findings": [
+   "Graph methods such as HNSW and KGraph were fastest at high recall on most datasets, e.g. GloVe, SIFT",
+   "On the synthetic Rand-Euclidean set, no HNSW setting passed 0.86 recall; Annoy and PANNG did well",
+   "Index build time on GloVe ranged from about 2 s for FAISS-IVF to almost 5 hours for HNSW"
+  ],
+  "course_link": "Practice 11 Part B is a small ANN-Benchmarks run: exact search as ground truth, HNSW and IVFFlat at several settings, and a table of recall@10 against ms per query.",
+  "limitation": "Benchmarks in-memory, single-thread runs on public datasets. It ignores filters, updates and disk-based indexes, and its rankings date quickly.",
+  "note_question": "Why is a speed figure without recall meaningless? What would a fair comparison on your final project's data need?",
+  "notes_slide1": "Section 1 explains why a benchmark is needed. Exact search in high dimensions is slow, so many approximate methods exist: trees, graphs and hashing. Authors usually compare a new method with a few rivals on a few datasets, and readers cannot reproduce the results or tell whether the choice was selective. ANN-Benchmarks compares implementations, not ideas, each as its author intended. Section 3 describes the system. An algorithm only needs a simple interface: build an index from the data, then answer queries. Each one is installed with a Docker file and called from Python, or through a simple text protocol for other languages. Datasets come as HDF5 files that include the true 100 nearest neighbours of every query. A YAML file lists each algorithm's build parameters and query parameters; the tool builds each index once and then runs every query setting on it. By default it uses a single CPU thread, so all libraries run under the same conditions. It records build time, index size, query time and the returned points, and computes recall afterwards.",
+  "notes_slide2": "Section 4 runs the benchmark on Amazon EC2 machines, with a limit of 5 hours per setting, and asks four questions. Performance: on GloVe and SIFT, graph-based methods were fastest; HNSW led over all recall values, with KGraph close at high recall and FAISS-IVF third. Robustness: on a synthetic dataset with little global structure, HNSW and SW-Graph failed while Annoy and PANNG did well, and on NYTimes FAISS-IVF stayed below 0.7 recall. Approximation: allowing distances 1% above the true ones moved all curves but rarely changed the order of the methods. Build time differed hugely, which matters when data changes often. In batch mode on a GPU, the FAISS inverted file answered about 655,000 queries per second at 0.7 recall. The authors' advice: graph indexes give the best query performance but are slow to build; an inverted file is small and quick to build. They also note that the fastest libraries expose many parameters and are not easy to use. This text is the 2018 preprint; the project website keeps newer results."
+ }
+]

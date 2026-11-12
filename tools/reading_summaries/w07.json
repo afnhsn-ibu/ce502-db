@@ -1,0 +1,170 @@
+[
+ {
+  "course_key": "Chaudhuri & Dayal 1997, An Overview of Data Warehousing and OLAP Technology (SIGMOD Record 26(1))",
+  "label": "Chaudhuri & Dayal 1997",
+  "kind": "Required",
+  "short_title": "A Warehouse Needs Its Own Design and Tools",
+  "citation": "Chaudhuri, S., & Dayal, U. (1997). An overview of data warehousing and OLAP technology. ACM SIGMOD Record, 26(1), 65–74. https://doi.org/10.1145/248603.248616",
+  "problem": "By 1997 every major database vendor sold decision-support products, but operational databases were tuned for short update transactions. The authors ask what a data warehouse needs that an OLTP database does not give.",
+  "key_ideas": [
+   "Keep the warehouse separate: OLAP needs history, integrated sources and other access methods",
+   "Back-end tools extract, clean, load and refresh data; front-end tools give a multidimensional view",
+   "Star schemas, snowflakes and fact constellations map the multidimensional model onto tables"
+  ],
+  "key_term": {
+   "term": "Data warehouse",
+   "definition": "Subject-oriented, integrated, time-varying and non-volatile data, kept mainly to support decisions"
+  },
+  "slide2_title": "Speed Comes From Indexes and Precomputed Summaries",
+  "findings": [
+   "Bitmap indexes and join indexes speed up selections and star joins on large fact tables",
+   "Materialised summary views help, but choosing, using and refreshing them are open problems",
+   "ROLAP servers scale with relational systems; MOLAP arrays index well but waste space when sparse"
+  ],
+  "course_link": "Lessons 7-1 and 7-2 follow this survey: OLTP vs OLAP, ETL and the star schema. In Practice 7 you build its pipeline: a separate dwlab database, an ETL script and a star.",
+  "limitation": "A 1997 snapshot: most products it names are gone, and column stores, cloud warehouses and data lakes are missing. It surveys; it does not evaluate.",
+  "note_question": "Pick two warehouse server techniques from section 6. How would each speed up a query such as dollars by year and city in Practice 7?",
+  "notes_slide1": "This ten-page survey grew out of a tutorial the authors gave at VLDB 1996. It opens with the contrast you met in Lesson 7-1. OLTP applications run short, repetitive transactions that read or update a few records by primary key, and the key metric is transaction throughput. A warehouse holds historical, summarised and consolidated data from several sources, and its queries are ad hoc, complex and read millions of records. The authors give reasons to keep the two apart: OLAP queries would slow down a finely tuned OLTP system, decision support needs history that operational systems do not keep, data from many sources must be cleaned and reconciled, and the multidimensional model needs special storage and access methods. Section 2 shows the architecture: sources, extract-transform-load-refresh tools, the warehouse and data marts, OLAP servers, front-end tools and a metadata repository. Section 3 covers data cleaning, batch and incremental loading, and refresh by data shipping or transaction shipping.",
+  "notes_slide2": "Section 4 describes the multidimensional model: numeric measures, such as sales, depend on dimensions, such as product, city and date, and dimensions form hierarchies, such as day, month, quarter and year. It also defines roll-up, drill-down, slice and dice, and pivot. Section 5 maps this model onto tables. A star schema has one fact table and one denormalised table per dimension. A snowflake normalises the dimensions into hierarchies, and a fact constellation shares dimensions between several fact tables. Section 6 is about speed. Bitmap indexes represent a list of rows as a bit vector, so conditions on several columns become fast AND and OR operations. Join indexes precompute the link between dimension values and fact rows. Materialised views store summaries, and a view can answer a query if the query only needs coarser grouping. The paper also contrasts ROLAP and MOLAP servers and mentions the new CUBE and ROLLUP operators. Notice how much of this survey is still current."
+ },
+ {
+  "course_key": "Gray et al. 1997, Data Cube (Data Mining and Knowledge Discovery 1(1))",
+  "label": "Gray et al. 1997",
+  "kind": "Required",
+  "short_title": "CUBE Generalises GROUP BY to N Dimensions",
+  "citation": "Gray, J., Chaudhuri, S., Bosworth, A., Layman, A., Reichart, D., Venkatrao, M., Pellow, F., & Pirahesh, H. (1997). Data cube: A relational aggregation operator generalizing group-by, cross-tab, and sub-totals. Data Mining and Knowledge Discovery, 1(1), 29–53. https://doi.org/10.1023/A:1009726021843",
+  "problem": "Reports need histograms, subtotals, roll-ups and cross-tabulations, but SQL's GROUP BY gives one level of aggregation per query. A cross-tab on six dimensions needs a union of 64 GROUP BY queries.",
+  "key_ideas": [
+   "The ALL value stands for the set of values aggregated over, so subtotal rows still form a relation",
+   "CUBE computes the aggregate for every subset of the N grouping columns: 2^N groupings",
+   "ROLLUP gives only the hierarchical subtotals, e.g. model; model and year; model, year and colour"
+  ],
+  "key_term": {
+   "term": "Super-aggregate",
+   "definition": "A cube row that aggregates over one or more grouping columns, shown with ALL in those columns"
+  },
+  "slide2_title": "In Practice, ALL Becomes NULL Plus GROUPING()",
+  "findings": [
+   "A minimal design writes NULL in place of ALL and adds a GROUPING() function to tell them apart",
+   "Each dimension gains one extra value, ALL: the 18-row Sales example gives a 48-row cube",
+   "CUBE, ROLLUP and GROUP BY can be combined in one query, e.g. ROLLUP on time and CUBE on product"
+  ],
+  "course_link": "Lesson 7-3's slides on GROUP BY ROLLUP and GROUP BY CUBE come from this paper. In Practice 7, Q7 and Q8 run both, and GROUPING() prints the NULLs as (all cities) or ALL.",
+  "limitation": "The SQL standard adopted a different syntax, with brackets and NULL instead of ALL. Section 5 only sketches how to compute cubes efficiently.",
+  "note_question": "Why is a UNION of many GROUP BY queries a poor way to build a cross-tab, and how does the ALL value keep the result a relation?",
+  "notes_slide1": "Jim Gray and colleagues from Microsoft and IBM wrote this paper as SQL vendors were adding support for data analysis. Section 1 explains that analysis tools treat data as an N-dimensional space and reduce dimensions by aggregating. SQL offered five aggregate functions and GROUP BY, which partitions a table into groups and computes one value per group. Section 2 names three problems. Histograms need grouping on computed categories, such as day or nation, which standard SQL could only do with nested queries. Roll-up reports need totals at several levels, for example sales by model, then by model and year, then by model, year and colour. Cross-tabulations need the symmetric version, with totals in both directions. Each level needs its own GROUP BY, combined with UNION. A six-dimensional cross-tab therefore needs 64 GROUP BY queries, which means 64 scans or sorts of the data and a query that optimisers cannot analyse. Representing totals as extra columns, as Chris Date suggested, makes the number of columns explode instead.",
+  "notes_slide2": "Section 3 proposes the CUBE operator. It first computes the ordinary GROUP BY, the core of the cube, and then adds every super-aggregate, writing ALL in each aggregated column. With N grouping columns there are 2^N groupings, and with column cardinalities C1 to CN the cube has at most the product of (Ci + 1) rows. ROLLUP is the asymmetric case for hierarchies: it adds only the prefixes, which suits dimensions like year, month and day where a full cube would be meaningless. The authors discuss ALL carefully. It really stands for a set of values, which makes it as tricky as NULL. They therefore offer a simpler design: use NULL for ALL and add a GROUPING() function that returns true for aggregated columns. This is what SQL Server 6.5 did and what PostgreSQL does today. Section 3.6 links cubes to star and snowflake schemas, and section 4 proposes syntax for percent-of-total queries. Section 5, not required, classifies aggregates as distributive, algebraic or holistic."
+ },
+ {
+  "course_key": "Harinarayan, Rajaraman & Ullman 1996, Implementing Data Cubes Efficiently (SIGMOD)",
+  "label": "Harinarayan et al. 1996",
+  "kind": "Required",
+  "short_title": "Materialise the Cuboids With the Most Benefit",
+  "citation": "Harinarayan, V., Rajaraman, A., & Ullman, J. D. (1996). Implementing data cubes efficiently. In Proceedings of the 1996 ACM SIGMOD International Conference on Management of Data (SIGMOD '96) (pp. 205–216). ACM. https://doi.org/10.1145/233269.233333",
+  "problem": "A full data cube is often too large to store and too slow to build, but computing every query from raw data is too slow. With room for only some views, which cuboids should a warehouse precompute?",
+  "key_ideas": [
+   "Views form a lattice: a view answers any query with coarser grouping, e.g. part from part, customer",
+   "Linear cost model: a query costs the number of rows in the materialised view it is answered from",
+   "A view's benefit is the total cost it saves over all views below it, given the views already chosen"
+  ],
+  "key_term": {
+   "term": "Lattice of views",
+   "definition": "The cuboids ordered by which can be computed from which, with the base cuboid at the top"
+  },
+  "slide2_title": "Greedy Choice Gets at Least 63% of the Best Benefit",
+  "findings": [
+   "In TPC-D, the 6M-row part, customer view adds nothing: the 6M-row base view answers just as fast",
+   "Picking 5 of 12 views gave almost the minimum query time with little more space than the base view",
+   "Greedy always gets (e - 1)/e of the best benefit; unless P = NP, no fast method can promise more"
+  ],
+  "course_link": "Lesson 7-3's lattice of cuboids and partial materialisation come from this paper. In Practice 7, mv_month_city_type answers year-by-city from 384 cells, not 200,000 rows.",
+  "limitation": "Cost is only view size: indexes, clustering and refresh cost are ignored. The space-limited version needs awkward boundary cases set aside.",
+  "note_question": "In the paper's greedy example (Figures 7 and 8), view f is a weak first choice but wins round two. Recompute both rounds and say why.",
+  "notes_slide1": "The authors, from Stanford, start from a practical fact: warehouses precompute summary tables, and one department-store chain kept 2,400 of them. Each cell of a data cube with an ALL in its address can be computed from other cells, so the question is which sets of cells, that is which GROUP BY views, to store. Their running example uses TPC-D with three dimensions, part, supplier and customer, which give eight views. The base view has 6 million rows, and storing all eight views takes slightly more than 19 million rows. But the views grouped by part and customer, and by supplier and customer, also have about 6 million rows, so they save nothing over the base view. Dropping them gives almost the same query cost with about 7 million rows. Section 2 generalises this as a lattice. A query depends on a view if it can be answered from it. Dimension hierarchies are lattices too: days roll up to weeks or months, but weeks do not roll up to months.",
+  "notes_slide2": "Section 3 sets the cost model: answering a query costs the number of rows in the smallest materialised view it can be computed from. The authors check this on TPC-D and find query time almost linear in view size. Section 4 states the problem: choose k views, plus the base view, to minimise the average query cost. This is NP-complete, so they use a greedy algorithm. The benefit of a view is the sum, over every view it can answer, of how much it lowers that view's current cost. In each round the greedy algorithm adds the view with the largest benefit. In the eight-view example of Figures 7 and 8 it picks b, f and d, and the total cost falls from 800 to 420, which is optimal there. In general they prove that greedy always reaches at least (e - 1)/e, about 63%, of the best possible benefit, and that the bound is tight. The guarantee also holds when views have different query frequencies."
+ },
+ {
+  "course_key": "Zhao, Deshpande & Naughton 1997, An Array-Based Algorithm for Simultaneous Multidimensional Aggregates (SIGMOD)",
+  "label": "Zhao et al. 1997",
+  "kind": "Optional",
+  "short_title": "Compute Many Group-Bys in One Pass Over an Array",
+  "citation": "Zhao, Y., Deshpande, P. M., & Naughton, J. F. (1997). An array-based algorithm for simultaneous multidimensional aggregates. In Proceedings of the 1997 ACM SIGMOD International Conference on Management of Data (SIGMOD '97) (pp. 159–170). ACM. https://doi.org/10.1145/253260.253288",
+  "problem": "Relational OLAP systems computed the CUBE by sorting or hashing tuples. Multidimensional OLAP systems store sparse arrays, where a cell's position encodes its dimension values. How should a cube be computed there?",
+  "key_ideas": [
+   "Split the array into small n-dimensional chunks; store sparse chunks as offset and value pairs",
+   "MultiWay: while a chunk is in memory, add its cells to every group-by that needs them",
+   "Read chunks in a dimension order that keeps the partial results held in memory small"
+  ],
+  "key_term": {
+   "term": "Dimension order",
+   "definition": "The order for reading chunks; reading from the smallest to the largest dimension needs the least memory"
+  },
+  "slide2_title": "Arrays Can Beat Tables Even for Relational Data",
+  "findings": [
+   "MultiWay was much faster than computing each group-by separately and than a ROLAP cube algorithm",
+   "Loading a table into an array, cubing the array and writing tables back beat cubing the table",
+   "The memory for a one-pass cube is bounded and usually far smaller than the base array"
+  ],
+  "course_link": "Lesson 7-3's slide Computing Cubes Efficiently names MultiWay. In Practice 7, PostgreSQL computes Q8's CUBE over tables: the relational approach this paper compares against.",
+  "limitation": "Tested only on synthetic data, on one workstation with 32 MB of memory. Memory grows fast with the number of dimensions, so very wide cubes are hard.",
+  "note_question": "The cube is the same whatever order the chunks are read in. Why, then, does the reading order change the memory needed?",
+  "notes_slide1": "Zhao, Deshpande and Naughton, at the University of Wisconsin, noticed that earlier cube algorithms were all for relational OLAP. Those algorithms sort or hash tuples to bring related rows together, and compute one group-by from another. Multidimensional OLAP systems, such as Essbase, store only the measure values in arrays; a cell's position tells its product, store and date. There is nothing to sort, so the challenge is to visit the cells in a good order. Section 2 deals with storage. A large array is cut into chunks, small n-dimensional blocks that fit in memory, so that no dimension is favoured as it would be in row-major order. Chunks with less than 40% valid cells are compressed with chunk-offset compression: only pairs of offset and value are stored. Section 3 gives a simple algorithm that computes each group-by from its parent, one at a time. Section 4 presents the MultiWay array method, which overlaps the computation of many group-bys so that each chunk is read only once.",
+  "notes_slide2": "The key idea is that a chunk of the base array ABC contributes at once to the partial chunks of AB, AC and BC. The algorithm keeps in memory only the parts of each group-by that are still being filled. How much memory that takes depends on the dimension order in which the chunks are read. The authors prove that reading with the smallest dimension first and the largest last minimises memory, and they give an upper bound for a one-pass computation. A minimum memory spanning tree decides from which parent each group-by is computed. Section 5 tests the method on synthetic arrays with densities from 1% to 40%, on a 1997 workstation with 32 MB of memory. MultiWay was clearly faster than the naive methods and than a published ROLAP algorithm. The surprise is in the conclusion: even for a relational system, it was faster to load a table into an array, cube the array and write the results back as tables. Arrays are used here like the hash table in a hash join."
+ },
+ {
+  "course_key": "Beyer & Ramakrishnan 1999, Bottom-Up Computation of Sparse and Iceberg CUBEs (SIGMOD)",
+  "label": "Beyer & Ramakrishnan 1999",
+  "kind": "Optional",
+  "short_title": "Iceberg Cubes: Compute Only Cells Above a Threshold",
+  "citation": "Beyer, K., & Ramakrishnan, R. (1999). Bottom-up computation of sparse and iceberg CUBEs. In Proceedings of the 1999 ACM SIGMOD International Conference on Management of Data (SIGMOD '99) (pp. 359–370). ACM. https://doi.org/10.1145/304182.304214",
+  "problem": "Cubes with many dimensions are sparse: most cells hold very few rows, and the full cube can be far larger than the data. Analysts usually care only about the cells with enough support.",
+  "key_ideas": [
+   "Iceberg CUBE: keep only cells whose aggregate, e.g. COUNT(*), reaches a minimum support",
+   "BUC starts from group-bys on one attribute, then two, then three, partitioning the data each time",
+   "If a partition is below minimum support, none of its finer cells can qualify, so BUC prunes it"
+  ],
+  "key_term": {
+   "term": "Minimum support",
+   "definition": "The threshold a cell's aggregate, usually its count, must reach for the cell to be kept"
+  },
+  "slide2_title": "Pruning Early Makes Sparse Cubes Tractable",
+  "findings": [
+   "Building from coarse to fine group-bys reverses the order of all earlier cube algorithms",
+   "Pruning is like Apriori's for frequent itemsets, but trades some of it for locality and less memory",
+   "BUC outperformed earlier algorithms on sparse cubes, even when computing the full cube"
+  ],
+  "course_link": "Lesson 7-3's slide Iceberg Cubes: Keep Only the Cells That Matter states BUC's problem. In Practice 7, Q11 keeps only CUBE cells with at least a minimum count.",
+  "limitation": "Pruning needs a condition that can only fail as cells get finer, such as COUNT >= N. A threshold on AVG cannot be pruned this way.",
+  "note_question": "Why can BUC drop a partition with too few rows, but not a partition whose average price is below a threshold?",
+  "notes_slide1": "Beyer and Ramakrishnan, at the University of Wisconsin, start from a practical problem. When a cube has many dimensions, or dimensions with many values, most possible cells are empty and most non-empty cells contain only one or a few rows. Computing such a sparse cube in full produces a huge result, mostly made of cells that nobody will look at. They therefore define the Iceberg-CUBE problem: compute only the group-by cells whose aggregate, typically a count, is at least a minimum support. In SQL terms, this is a CUBE query with a clause such as HAVING COUNT(*) >= N. Like an iceberg, only a small part of the cube is above the surface. The authors give three uses: answering group-by queries with such a HAVING clause, mining association rules over several dimensions, and choosing interesting parts of the cube to precompute. The earlier algorithms, including the array method of Zhao et al., were designed to compute the full cube and gain little from a threshold.",
+  "notes_slide2": "The BUC algorithm, short for bottom-up cube, works in the opposite direction from earlier methods. It starts with the most aggregated level, then partitions the data on one dimension, and inside each partition recursively on the next dimension. Before going deeper, it checks the partition size. If a partition already has fewer rows than the minimum support, every finer cell inside it will be smaller still, so the whole branch is skipped. The name comes from the way the authors draw the lattice, with the ALL cell at the bottom and the base cuboid at the top. The pruning resembles the Apriori algorithm for frequent itemsets. BUC gives up some sharing of work between parent and child group-bys in exchange for better locality and lower memory use, and uses a fast counting sort for partitioning. The paper reports that BUC outperformed earlier algorithms on sparse cubes, including the full cube. This summary is based on the abstract and secondary descriptions; read the paper for the details."
+ },
+ {
+  "course_key": "Kimball & Ross 2013, The Data Warehouse Toolkit, ch. 1–3",
+  "label": "Kimball & Ross 2013",
+  "kind": "Optional",
+  "short_title": "Design Around Business Processes and Grain",
+  "citation": "Kimball, R., & Ross, M. (2013). The data warehouse toolkit: The definitive guide to dimensional modeling (3rd ed., Chs. 1–3). Wiley.",
+  "problem": "Business users need data that is easy to understand and fast to query, but normalised source systems spread one business event over many tables. How should warehouse tables be designed for these users?",
+  "key_ideas": [
+   "Dimensional models put measurements in fact tables and descriptive context in dimension tables",
+   "Four steps: choose the business process, declare the grain, then identify dimensions and facts",
+   "Conformed dimensions are shared by several fact tables, so results from processes can be combined"
+  ],
+  "key_term": {
+   "term": "Grain",
+   "definition": "What exactly one fact table row represents, e.g. one product scanned in one sales transaction"
+  },
+  "slide2_title": "Retail Sales: Start From the Most Detailed Grain",
+  "findings": [
+   "Chapter 3 models retail point-of-sale data at the finest grain: one row per product in a transaction",
+   "The transaction number stays in the fact table as a degenerate dimension, with no table of its own",
+   "Ratios such as gross margin percentage are non-additive: store the additive parts, compute the ratio"
+  ],
+  "course_link": "Lesson 7-2's four steps of dimensional design and its measure types follow Kimball. In Practice 7 you state the grain of fact_sales: one row per order line, as in chapter 3.",
+  "limitation": "A practitioner's book, not research: it presents one school of warehouse design. Its examples assume batch loads into relational star schemas.",
+  "note_question": "For your project's fact table, what is the grain, and which measures are additive, semi-additive or non-additive?",
+  "notes_slide1": "Ralph Kimball and Margy Ross wrote the standard practical guide to dimensional modelling; the third edition appeared in 2013. Chapter 1 sets out what a data warehouse and business intelligence system must do: make information easy to access, present it consistently, adapt to change, deliver it in time, protect it, and be trusted and accepted by business users. It then introduces the two kinds of table. Fact tables hold the numeric measurements of a business process event, mostly additive numbers, with foreign keys to the dimensions. Dimension tables hold the descriptive text that users filter and group by, such as product brand or store city, and they are deliberately denormalised. The chapter describes the Kimball architecture: source systems, an ETL system, a presentation area of dimensional models, and BI applications. It compares it with other architectures, such as independent data marts and Inmon's normalised enterprise warehouse, and corrects common myths about dimensional models.",
+  "notes_slide2": "Chapter 2 is a compact reference list of the techniques the rest of the book uses: the four-step design process, fact table types, surrogate keys, conformed dimensions, the enterprise bus matrix and the types of slowly changing dimension. Read it quickly and return to it later. Chapter 3 applies the four steps to a grocery chain's point-of-sale system. The business process is retail sales. The grain is declared at the most atomic level, one row per product on each sales transaction, because detailed data can always be rolled up but summaries cannot be drilled into. The dimensions are date, product, store, promotion, cashier and payment method, and the facts are quantity, prices, cost and profit amounts. The transaction number stays in the fact table as a degenerate dimension. The chapter warns against snowflaking dimensions and against fact tables with too many dimension keys. Compare its design with the fact_sales table in Practice 7."
+ }
+]

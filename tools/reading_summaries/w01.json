@@ -1,0 +1,170 @@
+[
+ {
+  "label": "Codd 1970",
+  "kind": "Required",
+  "course_key": "Codd 1970, A Relational Model of Data for Large Shared Data Banks (CACM 13(6))",
+  "short_title": "Programs Should Not Depend on Data Storage",
+  "citation": "Codd, E. F. (1970). A relational model of data for large shared data banks. Communications of the ACM, 13(6), 377–387. https://doi.org/10.1145/362384.362685",
+  "problem": "In 1970, programs read data through tree or network files and relied on how the records were stored. When the storage changed, the programs broke. Codd asks how to protect the users of large shared data banks from this.",
+  "key_ideas": [
+   "Three kinds of data dependence: on the order of records, on indexes and on fixed access paths",
+   "Describe all data as relations: sets of rows over domains, with no required order of rows",
+   "Normalisation replaces nested, non-simple domains with flat relations linked by keys"
+  ],
+  "key_term": {
+   "term": "Data independence",
+   "definition": "Programs and terminal users keep working when the internal representation of the data changes"
+  },
+  "slide2_title": "Users Need Only Relation and Domain Names",
+  "findings": [
+   "In a parts-and-projects example, a program written for one of five tree structures fails on at least three",
+   "A primary key identifies each row; a foreign key holds values of another relation's primary key",
+   "Normalised relations can be stored and exchanged as simple arrays, with no pointers or indexes"
+  ],
+  "course_link": "Lessons 1-1 and 1-2 build on it: every DBMS in the course map is relational. In Practice 1 you query lab1 by name, while pg_waldump shows the pages and blocks hidden beneath it.",
+  "limitation": "Describes a model, not a system: Codd does not discuss how to implement it. Performance, transactions and recovery are outside its scope.",
+  "note_question": "Choose one of Codd's three data dependencies. Describe a storage change that breaks a program, and how the relational view avoids it.",
+  "notes_slide1": "Codd wrote this paper at the IBM Research Laboratory in San Jose. At that time, systems such as IMS and IDS gave users tree-structured or network files, and programs moved through them record by record. Section 1.2 shows why this is a problem. Codd names three kinds of data dependence. With ordering dependence, programs assume that records arrive in their stored order. With indexing dependence, programs refer to particular indexes, such as the named chains of IDS, and fail when an index is removed. With access-path dependence, programs follow fixed parent-child paths. His parts-and-projects example gives five tree structures for the same facts; a program written for one of them fails on at least three of the others. Codd's goal is data independence: users and programs should keep working when the internal representation changes, as it must when query traffic and data types grow. He adds that a service which only tells users the current structure is not a satisfactory answer.",
+  "notes_slide2": "Section 1.3 gives the solution. A relation is a set of tuples; each element of a tuple comes from a domain, and a relation on n domains has degree n. Codd draws relations as tables, but stresses that the order of rows does not matter and that all rows are distinct. A user should need to know only the name of a relation and the names of its domains, with role names such as sub.part and super.part when one domain appears twice. A primary key identifies each tuple; a foreign key is a domain whose values are the primary key of another relation. Section 1.4 introduces normalisation. A domain whose values are themselves relations, such as an employee's salary history, is removed by copying the parent's primary key into a separate flat relation. Section 1.5 then sketches a data sublanguage based on predicate calculus, an idea that later led to languages such as SQL. Note what the paper leaves out: how to build such a system."
+ },
+ {
+  "label": "Haerder & Reuter 1983",
+  "kind": "Required",
+  "course_key": "Haerder & Reuter 1983, Principles of Transaction-Oriented Database Recovery (ACM Computing Surveys 15(4))",
+  "short_title": "A Common Vocabulary for Database Recovery",
+  "citation": "Haerder, T., & Reuter, A. (1983). Principles of transaction-oriented database recovery. ACM Computing Surveys, 15(4), 287–317. https://doi.org/10.1145/289.291",
+  "problem": "By the early 1980s, database systems used many recovery techniques, described in incompatible terms that mixed concepts with implementation. Haerder and Reuter want one precise framework to describe and compare any recovery scheme.",
+  "key_ideas": [
+   "A transaction must be atomic, consistent, isolated and durable: the paper names these ACID",
+   "Three failure types: transaction failure, system failure (memory lost), media failure (disk lost)",
+   "Four recovery actions: transaction UNDO, global UNDO, partial REDO and global REDO"
+  ],
+  "key_term": {
+   "term": "STEAL and FORCE",
+   "definition": "STEAL: changed pages may reach disk before commit. FORCE: all changed pages are written at commit"
+  },
+  "slide2_title": "Buffer Policy Decides What the Log Must Hold",
+  "findings": [
+   "With STEAL, undo information must reach the log before the page is written: the write-ahead log rule",
+   "Without FORCE, committed changes may be missing on disk after a crash, so the log needs redo data",
+   "Assumed rates: 10–100 transaction failures a minute, several crashes a week, one or two disk losses a year"
+  ],
+  "course_link": "Lesson 1-3's 'Two Paths to Disk' and checkpoint slides and Lesson 1-4's ACID slide use its terms. In Practice 1 Part C, the ROLLBACK after the failed INSERT is a transaction UNDO.",
+  "limitation": "A 1983 taxonomy: shadow pages, tape archive logs and System R examples are dated, and it rates costs only as high or low, with no measurements.",
+  "note_question": "Why must the log hold before images when STEAL is used, and after images when pages are not forced to disk at commit?",
+  "notes_slide1": "Haerder, from the University of Kaiserslautern, and Reuter, then at IBM in San Jose, wrote this survey to fix the vocabulary of recovery. Section 1 starts from the transaction, shown as a funds transfer program taken from Gray and colleagues. To be indivisible, a transaction needs four properties: atomicity, consistency, isolation and durability, which the authors call ACID. Recovery must restore the most recent transaction-consistent state: the database holds the results of all committed transactions and nothing of the others. The paper then lists the failures to expect. A transaction failure resets one transaction; the authors assume 10 to 100 a minute. A system failure loses main memory but not the disks; it happens several times a week and recovery should take minutes. A media failure destroys the online copy, perhaps once or twice a year, and needs an archive copy plus an archive log. From this follow four recovery actions: transaction UNDO, global UNDO of all unfinished transactions, partial REDO of committed work after a crash, and global REDO after a media failure.",
+  "notes_slide2": "Section 2 describes a DBMS as a hierarchy of layers, from files and blocks up to relations. It also shows a storage hierarchy: a volatile buffer, an online copy with a temporary log on disk, and an archive copy with an archive log, then kept on tape. It separates writing a page from propagating it, which makes the page part of the database that survives a crash. Section 3 asks what the log must contain. If changed pages may be written before commit, a policy called STEAL, the log needs undo information, and it must be written first: the write-ahead log rule. If pages are not forced to disk at commit, called no FORCE, the log needs redo information for partial REDO. Checkpoints limit how far back recovery must read; the authors compare transaction-oriented, transaction-consistent, action-consistent and fuzzy checkpoints. Table 4 rates every combination. The combination described in Lesson 1-3, pages written later in the background, needs both undo and redo information in the log."
+ },
+ {
+  "label": "Mohan et al. 1992",
+  "kind": "Required",
+  "course_key": "Mohan et al. 1992, ARIES (ACM TODS 17(1))",
+  "short_title": "Repeat History, Then Undo the Losers",
+  "citation": "Mohan, C., Haderle, D., Lindsay, B., Pirahesh, H., & Schwarz, P. (1992). ARIES: A transaction recovery method supporting fine-granularity locking and partial rollbacks using write-ahead logging. ACM TODS, 17(1), 94–162. https://doi.org/10.1145/128765.128770",
+  "problem": "Recovery methods of the 1980s were complex and ad hoc, and often limited row-level locking or rollback to savepoints. Some even undid the same change twice after repeated crashes. IBM researchers want one simple, general method.",
+  "key_ideas": [
+   "Write-ahead logging: log records must be on stable storage before the changed page replaces the old one",
+   "Each page stores the LSN of its latest logged update, so recovery can tell which changes it holds",
+   "Rollbacks are logged too, as redo-only compensation log records that point to the next record to undo"
+  ],
+  "key_term": {
+   "term": "Repeating history",
+   "definition": "Redoing every logged update missing on disk, for all transactions, so the database returns to its crash state"
+  },
+  "slide2_title": "Restart in Three Passes: Analysis, Redo, Undo",
+  "findings": [
+   "Analysis reads from the last checkpoint to find loser transactions, dirty pages and where redo starts",
+   "Redo applies a record only if the page LSN is lower than the record's LSN, and writes no new log",
+   "With compensation records, rollback writes a bounded amount of log, even after repeated crashes"
+  ],
+  "course_link": "Lesson 1-3's 'Going Deeper: Crash Recovery in Three Phases' slide is ARIES. In Practice 1 Part B, pg_waldump prints each record's LSN and prev link: the same log addressing.",
+  "limitation": "Almost 70 pages, mostly detailed algorithms. PostgreSQL uses LSNs, WAL and redo, but its multi-version storage needs no undo pass after a crash.",
+  "note_question": "What problem do compensation log records solve? Describe what could go wrong after a second crash during undo without them.",
+  "notes_slide1": "ARIES was developed at IBM's Almaden research laboratory and was implemented, to varying degrees, in DB2, the OS/2 Extended Edition Database Manager, Starburst and other systems. Section 1 sets out the basics. The log is an ever-growing sequential file, and every record gets a log sequence number, or LSN, in ascending order. The write-ahead logging protocol says that the log records describing a change must be on stable storage before the changed page replaces the old version on disk. A transaction completes its commit only when the log is forced up to its commit record. Each page carries the LSN of the last record that changed it. All records of one transaction are chained backwards through a PrevLSN field, so rollback can find them quickly. Section 2 lists the goals: simplicity, operation logging, partial rollbacks to savepoints, flexible buffer management, recovery of each object on its own, parallel and fast restart, and minimal overhead. The authors argue that a steal policy is still needed, even with large main memories.",
+  "notes_slide2": "Section 3 gives the overview of the method. Every update is logged, and so is every undo during a rollback, as a compensation log record, or CLR. A CLR is redo-only. Its UndoNxtLSN field points to the record before the one just undone, so a later rollback skips work already done. The authors note that some other systems could undo the same change twice, which caused real problems for customers. Checkpoints are fuzzy: they record the active transactions and the dirty pages without stopping normal work. After a crash, restart makes three passes. Analysis reads the log from the last checkpoint to the end and finds the loser transactions, the dirty pages and the point where redo must begin. Redo repeats history: it reapplies every missing update, for all transactions, when the page LSN is lower than the record's LSN. The database is then exactly as it was at the crash. Undo rolls back the losers in reverse order and writes CLRs, just as a normal rollback would."
+ },
+ {
+  "label": "Gray 1981",
+  "kind": "Optional",
+  "course_key": "Gray 1981, The Transaction Concept (VLDB)",
+  "short_title": "A Transaction Is a Contract: All or Nothing",
+  "citation": "Gray, J. (1981). The transaction concept: Virtues and limitations. In Proceedings of the 7th International Conference on Very Large Data Bases (VLDB '81) (pp. 144–154).",
+  "problem": "Transactions worked well for short tasks such as airline bookings and funds transfers. Gray restates the idea, compares two ways to implement it, and asks where the concept stops working.",
+  "key_ideas": [
+   "From contract law: a transaction is consistent, atomic and durable; mistakes need new transactions",
+   "Protected actions can be undone; real actions, such as dispensing cash, must wait until commit",
+   "Two implementations: time-domain addressing keeps every version; logging and locking keep a log"
+  ],
+  "key_term": {
+   "term": "Compensating transaction",
+   "definition": "A new transaction that reverses the effect of a committed one, for example paying back money"
+  },
+  "slide2_title": "Nested and Long-Lived Work Breaks the Model",
+  "findings": [
+   "Mirrored discs that each fail about once a year give a pair failure about every 800 years",
+   "Deadlocks grow with the square of concurrency and the fourth power of transaction size",
+   "A trip arranged by a travel agent needs nested steps undone by compensation, not by rollback"
+  ],
+  "course_link": "Supports Lesson 1-4's 'All or nothing' and 'COMMIT and ROLLBACK' slides. Its undo and redo log records match Lesson 1-3's 'Anatomy of a Log Record' and the WAL records of Practice 1.",
+  "limitation": "A 1981 position paper with few measurements. It names only three properties; isolation appears through locking, not as a property of its own.",
+  "note_question": "Gray says operator and program errors, not hardware, limit reliability. Is this still true for a cloud database today?",
+  "notes_slide1": "Jim Gray wrote this paper at Tandem Computers. He starts from contract law and a wedding ceremony: the parties negotiate, then make the deal binding, and a bad deal can only be corrected by a further, compensating deal. In a computer, a transaction is a group of actions that changes the system state while obeying its consistency constraints; it either commits or aborts. Gray separates three kinds of action. Unprotected actions, such as writing a scratch file, need no undo. Protected actions, such as database updates, must be undoable and redoable. Real actions, such as dispensing cash, cannot be undone, so they are deferred until commit. He then turns to reliability. Fail-fast modules with spares make hardware look almost perfect: mirrored discs that each fail about once a year give a pair failure about every 800 years in a realistic analysis. Transactions are still needed, because people make errors. At least one transaction in 100 fails through data entry or authorisation errors, and operator and program errors now limit reliability.",
+  "notes_slide2": "The paper compares two ways to implement transactions. Time-domain addressing, as in Reed's proposal, never updates in place: each object keeps all its versions, addressed by name and time. Gray lists its problems: reads become writes, conflicts abort writers, and timestamps force a single lock granularity. Logging and locking is the alternative, which he explains with Ariadne's thread and Hansel and Gretel's crumbs. Each protected action writes undo and redo log records, and undo and redo must be restartable, so repeating them does no harm. Commit is a record in the log; with several logs, two-phase commit makes the decision atomic. Locks hide uncommitted updates from other transactions. Deadlocks are rare, but grow with the square of concurrency and the fourth power of transaction size. Gray concludes that the two approaches are more alike than different. He then names three limits: transactions cannot be nested, are assumed to last minutes rather than weeks, and are not part of programming languages."
+ },
+ {
+  "label": "Stonebraker & Pavlo 2024",
+  "kind": "Optional",
+  "course_key": "Stonebraker & Pavlo 2024, What Goes Around Comes Around… And Around… (SIGMOD Record 53(2))",
+  "short_title": "SQL Absorbs the Best Ideas of Each Rival Model",
+  "citation": "Stonebraker, M., & Pavlo, A. (2024). What goes around comes around... and around... ACM SIGMOD Record, 53(2), 21–37. https://doi.org/10.1145/3685980.3685984",
+  "problem": "Since 2005, many systems tried to replace SQL or the relational model: MapReduce, key-value and document stores, graph and vector databases. The authors ask whether any of them succeeded, and what changed instead.",
+  "key_ideas": [
+   "Reviews eight groups of systems, from MapReduce and key-value stores to vector and graph databases",
+   "Most non-relational systems stayed niche or added SQL-like languages, moving towards relational DBMSs",
+   "Real change came in implementation: column stores, cloud and lakehouse designs, driven by hardware"
+  ],
+  "key_term": {
+   "term": "Vector database",
+   "definition": "Stores embeddings and answers similarity queries with approximate nearest-neighbour indexes"
+  },
+  "slide2_title": "New Ideas Become Features of Relational Systems",
+  "findings": [
+   "Hadoop's market collapsed in the 2010s; in 2014 Google said MapReduce had no place in its stack",
+   "Within a year of ChatGPT, several relational DBMSs added vector indexes; JSON support took years",
+   "Over two decades, every data warehouse vendor moved from row storage to column storage"
+  ],
+  "course_link": "Lesson 1-1's 'The 12-Week Course Map' runs from logging to cloud and vector databases. In Practice 1 you use PostgreSQL, the kind of system the authors expect to keep winning.",
+  "limitation": "An opinion piece by two relational researchers. Its market claims are argued from examples, not measured, and some judgements are deliberately sharp.",
+  "note_question": "The authors expect SQL systems to absorb vector search. Which signs would show, by 2030, that this prediction was wrong?",
+  "notes_slide1": "In 2005, Stonebraker co-wrote a chapter that reviewed forty years of data models, from IMS and CODASYL to XML, and concluded that the relational model with extensible types had beaten every rival. In this paper he and Andrew Pavlo of Carnegie Mellon repeat the exercise for 2005 to 2024. Section 2 reviews eight groups: MapReduce, key-value stores, document databases, column-family stores, text search engines, array databases, vector databases and graph databases. Each part ends with a short discussion. MapReduce was a point solution for Google's web crawl; Hadoop copied it, but developers found the model too restrictive, and SQL layers such as Hive were built on top. Key-value stores are simple, but push schemas, joins and secondary indexes into the application. Document databases repeat the arguments of the object-oriented and XML systems of earlier decades, with the same problems of denormalisation. Vector databases, in the authors' view, are document stores with special indexes for approximate nearest-neighbour search: a feature, not a new architecture.",
+  "notes_slide2": "Section 3 argues that the real progress came in how relational systems are built, mainly because hardware changed. Every data warehouse vendor moved from row storage to column storage, and new systems such as Redshift, BigQuery and Snowflake started as column stores. Cloud databases brought back shared-disk designs, with storage separated from compute, and the authors expect this design to dominate. Data lakes and lakehouses, NewSQL systems, hardware accelerators and blockchain databases are also discussed, the last two with strong scepticism. The parting comments give lessons. Good marketing can carry an inferior product for years; the authors name Oracle in the 1980s, MySQL in the 2000s and MongoDB in the 2010s. Systems that large non-database companies release as open source are often immature. A good out-of-box experience matters to developers. Their prediction is more of the same: SQL and relational systems will keep absorbing the useful ideas of each new trend. Read it as an argued opinion from two experienced researchers."
+ },
+ {
+  "label": "Keshav 2007",
+  "kind": "Optional",
+  "course_key": "Keshav 2007, How to Read a Paper (SIGCOMM CCR 37(3))",
+  "short_title": "Read a Paper in Up to Three Passes",
+  "citation": "Keshav, S. (2007). How to read a paper. ACM SIGCOMM Computer Communication Review, 37(3), 83–84. https://doi.org/10.1145/1273445.1273458",
+  "problem": "Researchers spend hundreds of hours a year reading papers, yet the skill is rarely taught. New graduate students learn by trial and error and waste much effort. Keshav describes the method he has used for many years.",
+  "key_ideas": [
+   "Pass 1, five to ten minutes: title, abstract, introduction, headings, conclusions and references",
+   "Pass 2, up to an hour: read with care, study the figures, skip proofs, mark unread references",
+   "Pass 3: re-implement the paper in your mind to find its hidden assumptions and weak points"
+  ],
+  "key_term": {
+   "term": "The five Cs",
+   "definition": "Category, context, correctness, contributions and clarity: what you can judge after the first pass"
+  },
+  "slide2_title": "Match the Depth of Reading to Your Purpose",
+  "findings": [
+   "After the first pass you may stop, for example when the assumptions look invalid",
+   "A third pass takes four to five hours for a beginner and about one hour for an expert",
+   "For a literature survey, follow shared citations and key authors to the top conferences"
+  ],
+  "course_link": "Not tied to one lesson: Week 1's 'How to Read a Paper: Three Passes' slide adapts it for all CE 502 papers. Use two passes on Codd, Haerder and Reuter, and ARIES before each half-page note.",
+  "limitation": "A two-page personal method, not a study. It is untested, and its reading times are rough figures from the author's own experience.",
+  "note_question": "Try a first pass on the ARIES paper. Can you answer all five Cs after ten minutes? Which C was hardest, and why?",
+  "notes_slide1": "Srinivasan Keshav, a computer science professor at the University of Waterloo, wrote this two-page article because reading papers is a skill that researchers use for hundreds of hours a year but are rarely taught. His key idea is to read a paper in up to three passes, instead of from the first word to the last. Each pass has its own goal and builds on the one before. The first pass is a quick scan of five to ten minutes. You read the title, abstract and introduction carefully, then only the section and subsection headings, then the conclusions, and you glance over the references. Afterwards you should be able to answer the five Cs: the category of the paper, its context, the correctness of its assumptions, its contributions and its clarity. This may be enough: you can stop if the paper is outside your interests or its assumptions look wrong. Keshav also advises writers: most reviewers make only one pass, so headings and abstracts must be clear.",
+  "notes_slide2": "The second pass takes up to an hour. You read with greater care but skip details such as proofs. Look closely at figures and graphs: are the axes labelled, and do the results show error bars? Note the key points in the margin, and mark unread references for later. After this pass you should be able to summarise the paper, with its evidence, to someone else. If you still do not understand it, you can put it aside, read background material first, or continue. The third pass is for full understanding, for example when you review a paper. You try to re-implement the work in your mind, with the authors' assumptions, and compare your version with theirs. This shows both the innovations and the hidden failings. It takes four to five hours for a beginner and about an hour for an expert. Section 3 applies the method to a literature survey: start from three to five recent papers, then follow shared citations, key authors and the top conferences."
+ }
+]

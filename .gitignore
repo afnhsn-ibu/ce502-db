@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 .venv/
 ce502-preview.html
+node_modules/
+tools/reading_summaries/context/
+tools/reading_summaries/build/
